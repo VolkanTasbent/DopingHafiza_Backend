@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/myappdb
+    username: myappuser
+    # Env varsa onu kullan, yoksa 1
+    password: ${DB_PASSWORD:1}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway kullanıyorsun; burada validate önerilir.
+      # İlk kurulumda tablo yoksa geçici olarak update yapıp sonra validate'a dönebilirsin.
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    # Klasörün "db.migration" (noktalı) olduğu için şart:
+    locations: classpath:db.migration
+    # Üretimde temizliği engellemek iyi pratik:
+    clean-disabled: true
+    # Eğer mevcut bir şemaya sonradan geçiyorsan şunları AÇABİLİRSİN:
+    baseline-on-migrate: true
+    baseline-version: 0
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+jwt:
+  # Env yoksa varsayılan bir anahtar ver (en az 32 byte tut)
+  secret: ${JWT_SECRET:change-this-dev-secret-key-please-32bytes-min}
+  # 7 gün
+  expiration-minutes: ${JWT_EXP_MINUTES:10080}
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO
