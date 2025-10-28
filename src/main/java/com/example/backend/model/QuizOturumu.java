@@ -27,6 +27,7 @@ public class QuizOturumu {
     private Integer total;
     private Integer correct;
     private Integer wrong;
+    private Integer empty;  // Boş bırakılan soru sayısı
     private Integer score;
 
     // Basitlik için kullanıcı alanını atlıyoruz (email vs.)
@@ -39,6 +40,7 @@ public class QuizOturumu {
     public Integer getTotal() { return total; }
     public Integer getCorrect() { return correct; }
     public Integer getWrong() { return wrong; }
+    public Integer getEmpty() { return empty; }
     public Integer getScore() { return score; }
 
     public void setId(Long id) { this.id = id; }
@@ -48,5 +50,6 @@ public class QuizOturumu {
     public void setTotal(Integer total) { this.total = total; }
     public void setCorrect(Integer correct) { this.correct = correct; }
     public void setWrong(Integer wrong) { this.wrong = wrong; }
+    public void setEmpty(Integer empty) { this.empty = empty; }
     public void setScore(Integer score) { this.score = score; }
 }

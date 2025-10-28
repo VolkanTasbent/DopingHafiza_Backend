@@ -31,8 +31,9 @@ public class AuthService {
         u.setPassword(encoder.encode(r.password()));
         u.setRole("USER");
         u.setEnabled(true);
+        u.setAvatarUrl(null); // Başlangıçta profil resmi yok
         u = repo.save(u);
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl());
     }
 
     public LoginResponse login(LoginRequest r) {
@@ -41,7 +42,7 @@ public class AuthService {
         // Başarılı ise token üret
         String token = jwt.generate(r.email());
         AppUser u = repo.findByEmail(r.email()).orElseThrow();
-        var userDto = new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole());
+        var userDto = new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl());
         return new LoginResponse(token, userDto);
     }
 }

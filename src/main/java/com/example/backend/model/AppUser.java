@@ -26,6 +26,9 @@ public class AppUser {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(length = 500)
+    private String avatarUrl;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -42,4 +45,7 @@ public class AppUser {
     public void setPassword(String password) { this.password = password; }
     public void setRole(String role) { this.role = role; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }

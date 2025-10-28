@@ -26,7 +26,7 @@ public class KonuController {
     @GetMapping
     public List<KonuDTO> list(@RequestParam Long dersId) {
         return service.listByDers(dersId).stream()
-                .map(k -> new KonuDTO(k.getId(), k.getAd()))
+                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi()))
                 .toList();
     }
 
@@ -38,7 +38,7 @@ public class KonuController {
         Long dersId = toLongRequired(body.get("dersId"), "dersId");
         String ad = toStringRequired(body.get("ad"), "ad");
         Konu k = service.create(dersId, ad);
-        return new KonuDTO(k.getId(), k.getAd());
+        return new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi());
     }
 
     // ---- yardımcılar ----

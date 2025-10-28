@@ -25,6 +25,6 @@ public class AdminController {
         AppUser u = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Kullanıcı yok: " + id));
         u.setRole(role);
         repo.save(u);
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl());
     }
 }

@@ -1,8 +1,10 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.AuthUserDTO;
+import com.example.backend.dto.UpdateUserDTO;
 import com.example.backend.model.AppUser;
 import com.example.backend.repository.AppUserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +24,49 @@ public class UsersController {
     public AuthUserDTO me(Authentication auth) {
         var email = auth != null ? auth.getName() : null;
         var u = repo.findByEmail(email).orElseThrow();
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl());
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AuthUserDTO> updateProfile(@RequestBody UpdateUserDTO dto, Authentication auth) {
+        String email = auth.getName();
+        AppUser user = repo.findByEmail(email).orElseThrow();
+        
+        // Ad, soyad, email güncellemesi
+        if (dto.getAd() != null && !dto.getAd().isBlank()) {
+            user.setAd(dto.getAd());
+        }
+        if (dto.getSoyad() != null && !dto.getSoyad().isBlank()) {
+            user.setSoyad(dto.getSoyad());
+        }
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            user.setEmail(dto.getEmail());
+        }
+        
+        // Avatar URL güncellemesi
+        if (dto.getAvatarUrl() != null) {
+            user.setAvatarUrl(dto.getAvatarUrl());
+        }
+        
+        AppUser savedUser = repo.save(user);
+        AuthUserDTO response = new AuthUserDTO(
+            savedUser.getId(), 
+            savedUser.getEmail(), 
+            savedUser.getAd(), 
+            savedUser.getSoyad(), 
+            savedUser.getRole(), 
+            savedUser.getAvatarUrl()
+        );
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<AuthUserDTO> all() {
         return repo.findAll().stream()
-                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole()))
+                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl()))
                 .toList();
     }
 }

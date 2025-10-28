@@ -48,7 +48,7 @@ public class QuizService {
         oturum.setDurationMs(durationMs);
         oturum = oturumRepo.save(oturum);
 
-        int total = 0, correct = 0, wrong = 0;
+        int total = 0, correct = 0, wrong = 0, empty = 0;
 
         if (req.items() != null) {
             for (QuizSubmitItemDTO it : req.items()) {
@@ -59,8 +59,9 @@ public class QuizService {
 
                 Secenek secenek = null;
                 boolean dogru = false;
+                boolean bosmu = (it.secenekId() == null);
 
-                if (it.secenekId() != null) {
+                if (!bosmu) {
                     secenek = secenekRepo.findById(it.secenekId()).orElse(null);
                     if (secenek != null) {
                         dogru = secenek.isDogru();
@@ -70,9 +71,17 @@ public class QuizService {
                 // 🧩 Debug log
                 System.out.println("🧠 SoruID=" + it.soruId() +
                         " | SeçenekID=" + it.secenekId() +
-                        " | Dogru=" + dogru);
+                        " | Dogru=" + dogru +
+                        " | Boş=" + bosmu);
 
-                if (dogru) correct++; else wrong++;
+                // Puanlama: Doğru +3, Yanlış -1, Boş 0
+                if (bosmu) {
+                    empty++;
+                } else if (dogru) {
+                    correct++;
+                } else {
+                    wrong++;
+                }
 
                 Cevap c = new Cevap();
                 c.setOturum(oturum);
@@ -83,16 +92,20 @@ public class QuizService {
             }
         }
 
-        int score = correct * 3 - wrong;
+        // YKS Net Hesaplama: Net = Doğru - (Yanlış / 4)
+        // Her doğru +1 net, her yanlış -0.25 net
+        double net = correct - (wrong / 4.0);
+        
         oturum.setTotal(total);
         oturum.setCorrect(correct);
         oturum.setWrong(wrong);
-        oturum.setScore(score);
+        oturum.setEmpty(empty);
+        oturum.setScore((int) Math.round(net));  // Yuvarlanmış net değeri (score legacy için)
         oturumRepo.save(oturum);
 
-        System.out.println("✅ Oturum " + oturum.getId() + " kaydedildi. Doğru=" + correct + " | Yanlış=" + wrong);
+        System.out.println("✅ Oturum " + oturum.getId() + " kaydedildi. Doğru=" + correct + " | Yanlış=" + wrong + " | Boş=" + empty + " | Net=" + String.format("%.2f", net));
 
-        return new SubmitResponseDTO(oturum.getId(), correct, wrong, total, score);
+        return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
 
     /** ✅ Kullanıcının rapor özetlerini listeler */
@@ -103,15 +116,21 @@ public class QuizService {
                 org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
         );
         return page.getContent().stream()
-                .map(o -> new RaporOzetDTO(
-                        o.getId(),
-                        o.getFinishedAt(),
-                        o.getTotal(),
-                        o.getCorrect(),
-                        o.getWrong(),
-                        o.getDurationMs(),
-                        o.getScore()
-                ))
+                .map(o -> {
+                    // Net hesapla: Doğru - (Yanlış / 4)
+                    double net = (o.getCorrect() != null ? o.getCorrect() : 0) 
+                               - ((o.getWrong() != null ? o.getWrong() : 0) / 4.0);
+                    return new RaporOzetDTO(
+                            o.getId(),
+                            o.getFinishedAt(),
+                            o.getTotal(),
+                            o.getCorrect(),
+                            o.getWrong(),
+                            o.getEmpty(),
+                            o.getDurationMs(),
+                            net
+                    );
+                })
                 .toList();
     }
 
@@ -143,7 +162,7 @@ public class QuizService {
     /** ✅ Soru -> DTO dönüşümü */
     private SoruDTO mapToSoruDTO(Soru s) {
         var konular = s.getKonular().stream()
-                .map(k -> new KonuDTO(k.getId(), k.getAd()))
+                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi()))
                 .toList();
 
         var secenekler = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()

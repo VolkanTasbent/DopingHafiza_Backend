@@ -150,7 +150,7 @@ public class SoruService {
     // ---- Dönüşüm ----
     private SoruDTO toDTO(Soru s) {
         var konuDtos = s.getKonular().stream()
-                .map(k -> new KonuDTO(k.getId(), k.getAd()))
+                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi()))
                 .toList();
 
         var opts = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()

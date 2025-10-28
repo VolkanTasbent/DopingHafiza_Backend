@@ -8,6 +8,7 @@ public record RaporOzetDTO(
         Integer totalCount,
         Integer correctCount,
         Integer wrongCount,
+        Integer emptyCount,
         Long durationMs,
-        Integer score
+        Double net
 ) {}
