@@ -3,7 +3,11 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.SecenekDTO;
 import com.example.backend.dto.SoruDTO;
+import com.example.backend.dto.UpdateSecenekRequest;
+import com.example.backend.dto.UpdateSoruRequest;
+import com.example.backend.repository.SoruRepository;
 import com.example.backend.service.SoruService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +21,12 @@ import java.util.*;
 public class SoruController {
 
     private final SoruService service;
-    public SoruController(SoruService service) { this.service = service; }
+    private final SoruRepository soruRepo;
+    
+    public SoruController(SoruService service, SoruRepository soruRepo) { 
+        this.service = service;
+        this.soruRepo = soruRepo;
+    }
 
     @GetMapping
     public List<SoruDTO> liste(@RequestParam Long dersId,
@@ -49,9 +58,10 @@ public class SoruController {
         Integer zorluk = optionalInteger(body, "zorluk");
         String imageUrl = optionalString(body, "imageUrl");
         String aciklama = optionalString(body, "aciklama");
+        String cozumVideosuUrl = optionalString(body, "cozumVideosuUrl");
         Integer soruNo = optionalInteger(body, "soruNo");
 
-        SoruDTO created = service.addSoru(dersId, konuIds, metin, tip, zorluk, imageUrl, soruNo, aciklama);
+        SoruDTO created = service.addSoru(dersId, konuIds, metin, tip, zorluk, imageUrl, soruNo, aciklama, cozumVideosuUrl);
 
         // varsa secenekler ekle (sende zaten vardı)
         Object seceneklerObj = body.get("secenekler");
@@ -76,6 +86,79 @@ public class SoruController {
         boolean dogru = body.get("dogru") != null && Boolean.parseBoolean(Objects.toString(body.get("dogru")));
         Integer siralama = optionalInteger(body, "siralama");
         return service.addSecenek(soruId, metin, dogru, siralama);
+    }
+
+    /** Soru güncelle (ADMIN) */
+    @PutMapping("/{soruId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public SoruDTO updateSoru(@PathVariable Long soruId, 
+                               @Valid @RequestBody UpdateSoruRequest req) {
+        // Soru entity'sini al (dersId'yi bulmak için)
+        var soruEntity = soruRepo.findWithRelsById(soruId)
+                .orElseThrow(() -> new IllegalArgumentException("Soru bulunamadı: " + soruId));
+        
+        Long dersId = soruEntity.getDers().getId(); // Ders değiştirilemez, mevcut ders kullanılır
+        
+        // Soru bilgilerini güncelle
+        SoruDTO updated = service.updateSoru(
+            soruId,
+            dersId,
+            req.konuIds(),   // null ise değiştirilmez
+            req.metin(),
+            req.tip(),
+            req.zorluk(),
+            req.imageUrl(),
+            req.soruNo(),
+            req.aciklama(),
+            req.cozumVideosuUrl()  // null ise güncellenmez, string ise güncellenir (boş string null'a çevrilir)
+        );
+
+        // Seçenekleri güncelle (varsa)
+        if (req.secenekler() != null && !req.secenekler().isEmpty()) {
+            for (UpdateSecenekRequest secenekReq : req.secenekler()) {
+                if (secenekReq.id() == null) {
+                    // Yeni seçenek ekle
+                    Boolean dogru = secenekReq.dogru() != null ? secenekReq.dogru() : false;
+                    service.addSecenek(soruId, secenekReq.metin(), dogru, secenekReq.siralama());
+                } else {
+                    // Mevcut seçeneği güncelle
+                    service.updateSecenek(secenekReq.id(), secenekReq.metin(), secenekReq.dogru(), secenekReq.siralama());
+                }
+            }
+        }
+
+        return service.getById(soruId);
+    }
+
+    /** Seçenek güncelle (ADMIN) */
+    @PutMapping("/secenekler/{secenekId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public SecenekDTO updateSecenek(@PathVariable Long secenekId, 
+                                     @Valid @RequestBody UpdateSecenekRequest req) {
+        return service.updateSecenek(secenekId, req.metin(), req.dogru(), req.siralama());
+    }
+
+    /** Soru çözüm videosu URL'ini güncelle (ADMIN) - Sadece video URL'ini güncellemek için */
+    @PatchMapping("/{soruId}/cozum-videosu")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public SoruDTO updateCozumVideosu(@PathVariable Long soruId, 
+                                       @RequestBody Map<String, String> body) {
+        String cozumVideosuUrl = body.get("cozumVideosuUrl");
+        if (cozumVideosuUrl != null && cozumVideosuUrl.length() > 500) {
+            throw new IllegalArgumentException("Çözüm videosu URL maksimum 500 karakter olabilir");
+        }
+        
+        var soruEntity = soruRepo.findWithRelsById(soruId)
+                .orElseThrow(() -> new IllegalArgumentException("Soru bulunamadı: " + soruId));
+        
+        Long dersId = soruEntity.getDers().getId();
+        
+        // Sadece cozumVideosuUrl'yi güncelle
+        service.updateSoru(soruId, dersId, null, null, null, null, null, null, null, cozumVideosuUrl);
+        
+        return service.getById(soruId);
     }
 
     @DeleteMapping("/secenekler/{secenekId}")

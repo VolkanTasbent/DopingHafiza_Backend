@@ -20,3 +20,7 @@ UPDATE quiz_oturumu
 SET score = 0
 WHERE score IS NULL;
 
+
+
+
+

@@ -23,6 +23,9 @@ public class Konu {
     @Column(name = "dokuman_adi", length = 255)
     private String dokumanAdi;
 
+    @Column(name = "konu_anlatim_videosu_url", length = 500)
+    private String konuAnlatimVideosuUrl;
+
     public Long getId() { return id; }
     public Ders getDers() { return ders; }
     public void setDers(Ders ders) { this.ders = ders; }
@@ -34,4 +37,7 @@ public class Konu {
     
     public String getDokumanAdi() { return dokumanAdi; }
     public void setDokumanAdi(String dokumanAdi) { this.dokumanAdi = dokumanAdi; }
+    
+    public String getKonuAnlatimVideosuUrl() { return konuAnlatimVideosuUrl; }
+    public void setKonuAnlatimVideosuUrl(String konuAnlatimVideosuUrl) { this.konuAnlatimVideosuUrl = konuAnlatimVideosuUrl; }
 }

@@ -134,4 +134,105 @@ public class FileController {
             "message", "Döküman başarıyla yüklendi"
         );
     }
+
+    /**
+     * Konu anlatım videosu yükleme (sadece ADMIN)
+     * Video dosyası yükleme veya YouTube/Vimeo URL'i kaydetme
+     */
+    @PostMapping(value = "/upload-konu-videosu", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> uploadKonuVideosu(
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestParam Long konuId,
+            @RequestParam(required = false) String videoUrl
+    ) throws Exception {
+        
+        Konu konu = konuRepo.findById(konuId)
+                .orElseThrow(() -> new IllegalArgumentException("Konu bulunamadı: " + konuId));
+        
+        String finalUrl = null;
+        
+        // Öncelik: Dosya yüklenmişse dosyayı kaydet
+        if (file != null && !file.isEmpty()) {
+            // Dosya tipi kontrolü (video dosyaları)
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("video/")) {
+                throw new IllegalArgumentException("Sadece video dosyaları yüklenebilir");
+            }
+            
+            // Dosya boyutu kontrolü (max 100MB)
+            if (file.getSize() > 100 * 1024 * 1024) {
+                throw new IllegalArgumentException("Video dosyası boyutu 100MB'dan küçük olmalıdır");
+            }
+            
+            // Video dosyasını kaydet
+            finalUrl = storage.saveVideo(file);
+        } 
+        // Eğer dosya yoksa, URL ile kaydet (YouTube, Vimeo vb.)
+        else if (videoUrl != null && !videoUrl.trim().isEmpty()) {
+            String trimmed = videoUrl.trim();
+            // URL validasyonu (basit kontrol)
+            if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                throw new IllegalArgumentException("Geçerli bir URL giriniz (http:// veya https:// ile başlamalı)");
+            }
+            if (trimmed.length() > 500) {
+                throw new IllegalArgumentException("Video URL maksimum 500 karakter olabilir");
+            }
+            finalUrl = trimmed;
+        } else {
+            throw new IllegalArgumentException("Video dosyası veya URL gerekli");
+        }
+        
+        // Konu'yu güncelle
+        konu.setKonuAnlatimVideosuUrl(finalUrl);
+        konuRepo.save(konu);
+        
+        return Map.of(
+            "success", true,
+            "url", finalUrl,
+            "konuId", konuId,
+            "message", "Konu anlatım videosu başarıyla yüklendi"
+        );
+    }
+
+    /**
+     * Konu dokümanını sil (sadece ADMIN)
+     */
+    @DeleteMapping("/dokuman/{konuId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> deleteDokuman(@PathVariable Long konuId) {
+        Konu konu = konuRepo.findById(konuId)
+                .orElseThrow(() -> new IllegalArgumentException("Konu bulunamadı: " + konuId));
+        
+        // Doküman bilgilerini temizle
+        konu.setDokumanUrl(null);
+        konu.setDokumanAdi(null);
+        konuRepo.save(konu);
+        
+        return Map.of(
+            "success", true,
+            "konuId", konuId,
+            "message", "Doküman başarıyla silindi"
+        );
+    }
+
+    /**
+     * Konu anlatım videosunu sil (sadece ADMIN)
+     */
+    @DeleteMapping("/konu-videosu/{konuId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> deleteKonuVideosu(@PathVariable Long konuId) {
+        Konu konu = konuRepo.findById(konuId)
+                .orElseThrow(() -> new IllegalArgumentException("Konu bulunamadı: " + konuId));
+        
+        // Video URL'ini temizle
+        konu.setKonuAnlatimVideosuUrl(null);
+        konuRepo.save(konu);
+        
+        return Map.of(
+            "success", true,
+            "konuId", konuId,
+            "message", "Konu anlatım videosu başarıyla silindi"
+        );
+    }
 }

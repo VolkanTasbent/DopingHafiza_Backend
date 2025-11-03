@@ -24,7 +24,15 @@ public class UsersController {
     public AuthUserDTO me(Authentication auth) {
         var email = auth != null ? auth.getName() : null;
         var u = repo.findByEmail(email).orElseThrow();
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl());
+        
+        // Rol bilgisi sadece ADMIN'lere gösterilir
+        String roleToShow = null;
+        if (auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            roleToShow = u.getRole();
+        }
+        
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl());
     }
 
     @PutMapping("/me")
@@ -50,12 +58,20 @@ public class UsersController {
         }
         
         AppUser savedUser = repo.save(user);
+        
+        // Rol bilgisi sadece ADMIN'lere gösterilir
+        String roleToShow = null;
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            roleToShow = savedUser.getRole();
+        }
+        
         AuthUserDTO response = new AuthUserDTO(
             savedUser.getId(), 
             savedUser.getEmail(), 
             savedUser.getAd(), 
             savedUser.getSoyad(), 
-            savedUser.getRole(), 
+            roleToShow, 
             savedUser.getAvatarUrl()
         );
         

@@ -162,7 +162,7 @@ public class QuizService {
     /** ✅ Soru -> DTO dönüşümü */
     private SoruDTO mapToSoruDTO(Soru s) {
         var konular = s.getKonular().stream()
-                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi()))
+                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi(), k.getKonuAnlatimVideosuUrl()))
                 .toList();
 
         var secenekler = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
@@ -177,7 +177,8 @@ public class QuizService {
                 s.getImageUrl(),
                 s.getDers().getAd(),
                 konular,
-                secenekler
+                secenekler,
+                s.getCozumVideosuUrl()
         );
     }
 }

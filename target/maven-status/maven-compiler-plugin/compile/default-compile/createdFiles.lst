@@ -1,3 +1,4 @@
+com/example/backend/dto/UpdateSoruRequest.class
 com/example/backend/config/WebConfig.class
 com/example/backend/controller/AuthController.class
 com/example/backend/security/JwtAuthFilter.class
@@ -50,6 +51,7 @@ com/example/backend/repository/CozumKaydiRepository.class
 com/example/backend/dto/RaporOzetDTO.class
 com/example/backend/controller/UsersController.class
 com/example/backend/model/Secenek.class
+com/example/backend/dto/UpdateSecenekRequest.class
 com/example/backend/dto/RegisterRequest.class
 com/example/backend/service/FileStorageService.class
 com/example/backend/repository/AppUserRepository.class

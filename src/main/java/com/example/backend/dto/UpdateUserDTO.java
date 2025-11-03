@@ -20,3 +20,7 @@ public class UpdateUserDTO {
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 }
 
+
+
+
+

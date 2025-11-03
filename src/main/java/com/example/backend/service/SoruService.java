@@ -68,13 +68,13 @@ public class SoruService {
     /** Eski imza (geriye dönük uyum) */
     @Transactional
     public SoruDTO addSoru(Long dersId, List<Long> konuIds, String metin, String tip, Integer zorluk, String imageUrl) {
-        return addSoru(dersId, konuIds, metin, tip, zorluk, imageUrl, null, null);
+        return addSoru(dersId, konuIds, metin, tip, zorluk, imageUrl, null, null, null);
     }
 
-    /** Yeni: aciklama + soruNo destekli */
+    /** Yeni: aciklama + soruNo + cozumVideosuUrl destekli */
     @Transactional
     public SoruDTO addSoru(Long dersId, List<Long> konuIds, String metin, String tip, Integer zorluk,
-                           String imageUrl, Integer soruNo, String aciklama) {
+                           String imageUrl, Integer soruNo, String aciklama, String cozumVideosuUrl) {
         if (metin == null || metin.isBlank()) throw new IllegalArgumentException("Soru metni boş olamaz");
         if (konuIds == null || konuIds.isEmpty()) throw new IllegalArgumentException("En az bir konu seçmelisiniz");
 
@@ -96,6 +96,7 @@ public class SoruService {
         s.setZorluk(zorluk);
         s.setImageUrl(imageUrl);
         s.setAciklama(aciklama);
+        s.setCozumVideosuUrl(cozumVideosuUrl);
 
         // soruNo verilmemişse ders içi max + 1
         Integer currentMax = soruRepo.findMaxSoruNoByDers(ders);
@@ -138,6 +139,81 @@ public class SoruService {
         secenekRepo.deleteById(id);
     }
 
+    /** Soru güncelle */
+    @Transactional
+    public SoruDTO updateSoru(Long soruId, Long dersId, List<Long> konuIds, String metin, 
+                              String tip, Integer zorluk, String imageUrl, 
+                              Integer soruNo, String aciklama, String cozumVideosuUrl) {
+        Soru s = soruRepo.findWithRelsById(soruId)
+                .orElseThrow(() -> new IllegalArgumentException("Soru bulunamadı: " + soruId));
+
+        // Konu listesi güncelle (varsa)
+        if (konuIds != null && !konuIds.isEmpty()) {
+            var konular = new LinkedHashSet<Konu>(konuRepo.findAllById(konuIds));
+            if (konular.isEmpty() || konular.size() != new LinkedHashSet<>(konuIds).size()) {
+                throw new IllegalArgumentException("Geçersiz konu listesi");
+            }
+            // Ders kontrolü
+            Ders ders = dersRepo.findById(dersId)
+                    .orElseThrow(() -> new IllegalArgumentException("Ders bulunamadı: " + dersId));
+            boolean hepsiAit = konular.stream().allMatch(k -> k.getDers().getId().equals(ders.getId()));
+            if (!hepsiAit) throw new IllegalArgumentException("Seçilen konular, belirtilen derse ait değil");
+            
+            s.setKonular(konular);
+        }
+
+        // Diğer alanları güncelle (null değilse)
+        if (metin != null && !metin.isBlank()) {
+            s.setMetin(metin.trim());
+        }
+        if (tip != null) {
+            s.setTip(tip);
+        }
+        if (zorluk != null) {
+            if (zorluk < 1 || zorluk > 5) {
+                throw new IllegalArgumentException("Zorluk 1-5 arası olmalı");
+            }
+            s.setZorluk(zorluk);
+        }
+        if (imageUrl != null) {
+            s.setImageUrl(imageUrl);
+        }
+        if (aciklama != null) {
+            s.setAciklama(aciklama);
+        }
+        if (cozumVideosuUrl != null) {
+            // Boş string ise null yap (URL'i temizle), aksi halde trim et ve kaydet
+            String trimmed = cozumVideosuUrl.trim();
+            s.setCozumVideosuUrl(trimmed.isEmpty() ? null : trimmed);
+        }
+        if (soruNo != null) {
+            s.setSoruNo(soruNo);
+        }
+
+        s = soruRepo.save(s);
+        return getById(s.getId());
+    }
+
+    /** Seçenek güncelle */
+    @Transactional
+    public SecenekDTO updateSecenek(Long secenekId, String metin, Boolean dogru, Integer siralama) {
+        Secenek o = secenekRepo.findById(secenekId)
+                .orElseThrow(() -> new IllegalArgumentException("Seçenek bulunamadı: " + secenekId));
+        
+        if (metin != null && !metin.isBlank()) {
+            o.setMetin(metin.trim());
+        }
+        if (dogru != null) {
+            o.setDogru(dogru);
+        }
+        if (siralama != null) {
+            o.setSiralama(siralama);
+        }
+        
+        o = secenekRepo.save(o);
+        return new SecenekDTO(o.getId(), o.getMetin(), o.isDogru(), o.getSiralama());
+    }
+
     /** Soru sil */
     @Transactional
     public void deleteSoru(Long id) {
@@ -150,7 +226,7 @@ public class SoruService {
     // ---- Dönüşüm ----
     private SoruDTO toDTO(Soru s) {
         var konuDtos = s.getKonular().stream()
-                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi()))
+                .map(k -> new KonuDTO(k.getId(), k.getAd(), k.getDokumanUrl(), k.getDokumanAdi(), k.getKonuAnlatimVideosuUrl()))
                 .toList();
 
         var opts = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
@@ -165,7 +241,8 @@ public class SoruService {
                 s.getImageUrl(),
                 s.getDers().getAd(),
                 konuDtos,
-                opts
+                opts,
+                s.getCozumVideosuUrl()
         );
     }
 }

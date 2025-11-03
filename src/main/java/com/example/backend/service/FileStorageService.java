@@ -12,11 +12,13 @@ public class FileStorageService {
     private final Path root = Paths.get("./uploads").toAbsolutePath().normalize();
     private final Path avatarRoot = root.resolve("avatars");
     private final Path docsRoot = root.resolve("docs");
+    private final Path videosRoot = root.resolve("videos");
 
     public FileStorageService() throws IOException {
         Files.createDirectories(root);
         Files.createDirectories(avatarRoot);
         Files.createDirectories(docsRoot);
+        Files.createDirectories(videosRoot);
     }
 
     /**
@@ -117,5 +119,26 @@ public class FileStorageService {
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         
         return "/files/docs/" + name;
+    }
+
+    /**
+     * Video kaydetme (MP4, MOV vb.)
+     */
+    public String saveVideo(MultipartFile file) throws IOException {
+        String ext = getFileExtension(file.getOriginalFilename());
+        
+        // Dosya adını temizle ve timestamp ekle
+        String original = file.getOriginalFilename();
+        String baseName = "video";
+        if (original != null && original.lastIndexOf('.') > 0) {
+            baseName = original.substring(0, original.lastIndexOf('.'))
+                    .replaceAll("[^a-zA-Z0-9_-]", "_");
+        }
+        String name = baseName + "_" + System.currentTimeMillis() + ext;
+        
+        Path target = videosRoot.resolve(name);
+        Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+        
+        return "/files/videos/" + name;
     }
 }

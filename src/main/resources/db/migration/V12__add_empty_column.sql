@@ -9,3 +9,7 @@ UPDATE quiz_oturumu
 SET empty = COALESCE(total, 0) - COALESCE(correct, 0) - COALESCE(wrong, 0)
 WHERE empty IS NULL OR empty = 0;
 
+
+
+
+

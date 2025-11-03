@@ -44,6 +44,9 @@ public class Soru {
     @Column(name = "aciklama")
     private String aciklama;
 
+    @Column(name = "cozum_videosu_url", length = 500)
+    private String cozumVideosuUrl;
+
     // DB'de timestamptz ile uyumlu
     @Column(name = "olusturma_tarihi")
     private OffsetDateTime olusturmaTarihi;
@@ -84,6 +87,9 @@ public class Soru {
 
     public String getAciklama() { return aciklama; }
     public void setAciklama(String aciklama) { this.aciklama = aciklama; }
+
+    public String getCozumVideosuUrl() { return cozumVideosuUrl; }
+    public void setCozumVideosuUrl(String cozumVideosuUrl) { this.cozumVideosuUrl = cozumVideosuUrl; }
 
     public OffsetDateTime getOlusturmaTarihi() { return olusturmaTarihi; }
     public void setOlusturmaTarihi(OffsetDateTime olusturmaTarihi) { this.olusturmaTarihi = olusturmaTarihi; }

@@ -9,6 +9,7 @@ public record SoruDTO(
         Integer zorluk,
         String imageUrl,
         String dersAd,
-        List<KonuDTO> konular,       // <— artık liste
-        List<SecenekDTO> secenekler
+        List<KonuDTO> konular,
+        List<SecenekDTO> secenekler,
+        String cozumVideosuUrl
 ) {}

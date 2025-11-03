@@ -14,6 +14,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/UsersController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/AuthUserDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CozumKaydiDto.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CreateKonuRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/KonuDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginResponse.java
@@ -27,6 +28,8 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SecenekDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SoruDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SubmitResponseDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateSecenekRequest.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateSoruRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateUserDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/exception/GlobalExceptionHandler.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/AppUser.java

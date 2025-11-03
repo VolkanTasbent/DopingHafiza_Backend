@@ -4,3 +4,7 @@ ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 COMMENT ON COLUMN app_user.avatar_url IS 'Kullanıcının profil resmi URL yolu';
 
+
+
+
+
