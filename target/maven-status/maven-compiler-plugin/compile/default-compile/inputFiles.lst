@@ -4,6 +4,8 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/AdminController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/AuthController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/CozumController.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DenemeSinaviController.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DenemeSinaviFrontendController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DersController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/FileController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/HealthController.java
@@ -14,7 +16,15 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/UsersController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/AuthUserDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CozumKaydiDto.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CreateDenemeSinaviRequest.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CreateDenemeSinaviRequestFrontend.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/CreateKonuRequest.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviResponseDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSoruDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSoruDTOForQuiz.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSubmitItemDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSubmitRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/KonuDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginResponse.java
@@ -28,6 +38,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SecenekDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SoruDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/SubmitResponseDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateDenemeSinaviSoruRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateSecenekRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateSoruRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/UpdateUserDTO.java
@@ -35,6 +46,8 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/AppUser.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Cevap.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/CozumKaydi.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/DenemeSinavi.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/DenemeSinaviSoru.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Ders.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Konu.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/QuizOturumu.java
@@ -43,6 +56,8 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/AppUserRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/CevapRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/CozumKaydiRepository.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DenemeSinaviRepository.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DenemeSinaviSoruRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DersRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/KonuRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/QuizOturumuRepository.java
@@ -54,6 +69,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/AppUserDetailsService.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/AuthService.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/CozumKaydiService.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/DenemeSinaviService.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/DersService.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/FileStorageService.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/service/KonuService.java

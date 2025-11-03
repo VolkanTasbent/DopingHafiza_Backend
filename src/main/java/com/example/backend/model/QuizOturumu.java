@@ -14,6 +14,11 @@ public class QuizOturumu {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
+    // Deneme sınavı desteği (null ise normal soru çözme)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deneme_sinavi_id")
+    private com.example.backend.model.DenemeSinavi denemeSinavi;
+
 
     @Column(name="started_at")
     private Instant startedAt;
@@ -52,4 +57,7 @@ public class QuizOturumu {
     public void setWrong(Integer wrong) { this.wrong = wrong; }
     public void setEmpty(Integer empty) { this.empty = empty; }
     public void setScore(Integer score) { this.score = score; }
+
+    public com.example.backend.model.DenemeSinavi getDenemeSinavi() { return denemeSinavi; }
+    public void setDenemeSinavi(com.example.backend.model.DenemeSinavi denemeSinavi) { this.denemeSinavi = denemeSinavi; }
 }

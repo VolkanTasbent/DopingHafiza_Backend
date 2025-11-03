@@ -40,12 +40,19 @@ public class SecurityConfig {
                         // Okuma uçlarını açık bırak (React listeleme için)
                         .requestMatchers(GET, "/api/ders/**").permitAll()
                         .requestMatchers(GET, "/api/sorular/**").permitAll()
+                        .requestMatchers(GET, "/api/deneme-sinavlari/**").permitAll() // Deneme sınavları okuma
+                        .requestMatchers(GET, "/api/deneme-sinavi").permitAll() // Frontend için tekil endpoint (GET - listeleme)
+                        .requestMatchers(GET, "/api/deneme-sinavi/**").permitAll() // Frontend için tekil endpoint (GET - detay)
                         .requestMatchers(GET, "/api/raporlar/**").authenticated() // YENİ
 
                         // Yönetim gerektiren yazma uçları
                         .requestMatchers(POST, "/api/ders/**").hasRole("ADMIN")
                         .requestMatchers(POST, "/api/sorular/**").hasRole("ADMIN")
                         .requestMatchers(DELETE, "/api/sorular/**").hasRole("ADMIN")
+                        .requestMatchers(POST, "/api/deneme-sinavlari/**").hasRole("ADMIN")
+                        .requestMatchers(POST, "/api/deneme-sinavi").hasRole("ADMIN") // Frontend için tekil endpoint (POST)
+                        .requestMatchers(PUT, "/api/deneme-sinavlari/**").hasRole("ADMIN")
+                        .requestMatchers(DELETE, "/api/deneme-sinavlari/**").hasRole("ADMIN")
 
                         // Kullanıcı uçları
                         .requestMatchers(GET, "/api/users/me").authenticated()

@@ -1,0 +1,7 @@
+soru_metni,sik_a,sik_b,sik_c,sik_d,sik_e,dogru_cevap,zorluk,konular,aciklama,ders_ad
+"Bir fonksiyon f(x)=2^{x-1} + log₂(x²-3x+2) için tanım kümesi nedir?","x>1","x>2","x<1 veya x>2","x>0 ve x≠1,2","","C",5,"Fonksiyonlar,Logaritma","(x-1)(x-2)>0 → x<1 veya x>2.","Matematik"
+"x+1/x=3 ise x³+1/x³=?","18","24","27","30","","A",5,"Üslü Sayılar,Cebir","Kural: (x+1/x)³ = x³+1/x³+3(x+1/x).","Matematik"
+"Bir geometrik dizide a₁=2,a₅=162 ise r kaçtır?","2","3","4","5","","B",4,"Diziler,Geometrik Dizi","a₅=a₁·r⁴ → 162=2r⁴ → r=3.","Matematik"
+"Bir küpün hacmi 512 cm³. Köşegen uzunluğu nedir?","8√2","8√3","10","12","","B",4,"Geometri,Küp","Kenar=8 → köşegen=a√3.","Matematik"
+"logₐb=2 ve log_ba=1/2 ise a/b oranı nedir?","a=b","a=b²","a=b³","a=√b","","B",5,"Logaritma,Oran Orantı","logₐb=2→b=a²; log_ba=1/2→a=b^(1/2).","Matematik"
+

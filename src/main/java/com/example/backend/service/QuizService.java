@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -19,19 +21,25 @@ public class QuizService {
     private final SecenekRepository secenekRepo;
     private final QuizOturumuRepository oturumRepo;
     private final CevapRepository cevapRepo;
+    private final DenemeSinaviRepository denemeRepo;
+    private final DenemeSinaviSoruRepository denemeSoruRepo;
 
     public QuizService(
             DersRepository dersRepo,
             SoruRepository soruRepo,
             SecenekRepository secenekRepo,
             QuizOturumuRepository oturumRepo,
-            CevapRepository cevapRepo
+            CevapRepository cevapRepo,
+            DenemeSinaviRepository denemeRepo,
+            DenemeSinaviSoruRepository denemeSoruRepo
     ) {
         this.dersRepo = dersRepo;
         this.soruRepo = soruRepo;
         this.secenekRepo = secenekRepo;
         this.oturumRepo = oturumRepo;
         this.cevapRepo = cevapRepo;
+        this.denemeRepo = denemeRepo;
+        this.denemeSoruRepo = denemeSoruRepo;
     }
 
     /** ✅ Quiz sonuçlarını kaydeder */
@@ -180,5 +188,72 @@ public class QuizService {
                 secenekler,
                 s.getCozumVideosuUrl()
         );
+    }
+
+    /** Deneme sınavı çözme - Submit */
+    @Transactional
+    public SubmitResponseDTO submitDenemeSinavi(DenemeSinaviSubmitRequest req, AppUser user) {
+        DenemeSinavi deneme = denemeRepo.findById(req.denemeSinaviId())
+                .orElseThrow(() -> new IllegalArgumentException("Deneme sınavı bulunamadı: " + req.denemeSinaviId()));
+
+        Instant started = Optional.ofNullable(req.startedAt()).orElse(Instant.now());
+        Instant finished = Optional.ofNullable(req.finishedAt()).orElse(Instant.now());
+        long durationMs = java.time.Duration.between(started, finished).toMillis();
+
+        QuizOturumu oturum = new QuizOturumu();
+        oturum.setUser(user);
+        oturum.setDenemeSinavi(deneme);
+        oturum.setStartedAt(started);
+        oturum.setFinishedAt(finished);
+        oturum.setDurationMs(durationMs);
+        oturum = oturumRepo.save(oturum);
+
+        // Tüm soruları getir
+        List<DenemeSinaviSoru> sorular = denemeSoruRepo.findByDenemeSinaviOrderBySoruNoAsc(deneme);
+        Map<Integer, DenemeSinaviSoru> soruMap = sorular.stream()
+                .collect(java.util.stream.Collectors.toMap(DenemeSinaviSoru::getSoruNo, s -> s));
+
+        int total = sorular.size();
+        int correct = 0, wrong = 0, empty = 0;
+
+        // Cevap map'i oluştur
+        Map<Integer, String> cevaplar = new HashMap<>();
+        if (req.items() != null) {
+            for (DenemeSinaviSubmitItemDTO item : req.items()) {
+                cevaplar.put(item.soruNo(), item.secilenCevap());
+            }
+        }
+
+        // Her soru için kontrol et
+        for (DenemeSinaviSoru soru : sorular) {
+            String secilen = cevaplar.get(soru.getSoruNo());
+            boolean bosmu = (secilen == null || secilen.trim().isEmpty());
+            
+            boolean dogru = false;
+            if (!bosmu) {
+                String dogruCevap = soru.getDogruCevap();
+                dogru = dogruCevap != null && dogruCevap.trim().equalsIgnoreCase(secilen.trim());
+            }
+
+            if (bosmu) {
+                empty++;
+            } else if (dogru) {
+                correct++;
+            } else {
+                wrong++;
+            }
+        }
+
+        // YKS Net Hesaplama
+        double net = correct - (wrong / 4.0);
+
+        oturum.setTotal(total);
+        oturum.setCorrect(correct);
+        oturum.setWrong(wrong);
+        oturum.setEmpty(empty);
+        oturum.setScore((int) Math.round(net));
+        oturumRepo.save(oturum);
+
+        return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
 }

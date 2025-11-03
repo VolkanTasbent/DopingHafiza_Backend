@@ -19,7 +19,7 @@ public class QuizController {
         this.service = service; this.userRepo = userRepo;
     }
 
-
+    /** Normal soru çözme - Submit */
     @PostMapping("/submit")
     public SubmitResponseDTO submit(@RequestBody QuizSubmitRequest req, Principal principal) {
         AppUser user = null;
@@ -27,5 +27,15 @@ public class QuizController {
             user = userRepo.findByEmail(principal.getName()).orElse(null);
         }
         return service.submit(req, user);
+    }
+
+    /** Deneme sınavı çözme - Submit */
+    @PostMapping("/submit-deneme-sinavi")
+    public SubmitResponseDTO submitDenemeSinavi(@RequestBody DenemeSinaviSubmitRequest req, Principal principal) {
+        AppUser user = null;
+        if (principal != null && principal.getName() != null) {
+            user = userRepo.findByEmail(principal.getName()).orElse(null);
+        }
+        return service.submitDenemeSinavi(req, user);
     }
 }
