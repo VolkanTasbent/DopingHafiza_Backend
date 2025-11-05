@@ -17,3 +17,4 @@ public record CreateDenemeSinaviRequest(
     String aciklama
 ) {}
 
+

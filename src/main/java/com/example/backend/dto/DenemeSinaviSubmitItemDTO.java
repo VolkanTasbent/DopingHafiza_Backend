@@ -5,3 +5,4 @@ public record DenemeSinaviSubmitItemDTO(
     String secilenCevap  // "A", "B", "C", "D", "E" veya null (boş)
 ) {}
 
+

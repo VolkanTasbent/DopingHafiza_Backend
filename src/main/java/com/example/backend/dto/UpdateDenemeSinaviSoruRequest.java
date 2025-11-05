@@ -35,6 +35,28 @@ public record UpdateDenemeSinaviSoruRequest(
     
     Integer soruNo,
     
-    Long dersId
-) {}
+    Long dersId,
+    
+    @Size(max = 500, message = "Çözüm videosu URL maksimum 500 karakter olabilir")
+    String cozumVideosuUrl,
+    
+    @Size(max = 500, message = "Görsel URL maksimum 500 karakter olabilir")
+    String imageUrl
+) {
+    // Compact constructor - cozumVideosuUrl ve imageUrl'i trim et ve boş string ise null yap
+    public UpdateDenemeSinaviSoruRequest {
+        if (cozumVideosuUrl != null) {
+            cozumVideosuUrl = cozumVideosuUrl.trim();
+            if (cozumVideosuUrl.isEmpty()) {
+                cozumVideosuUrl = null;
+            }
+        }
+        if (imageUrl != null) {
+            imageUrl = imageUrl.trim();
+            if (imageUrl.isEmpty()) {
+                imageUrl = null;
+            }
+        }
+    }
+}
 

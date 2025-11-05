@@ -18,6 +18,7 @@ com/example/backend/BackendApplication.class
 com/example/backend/dto/QuizSubmitRequest.class
 com/example/backend/controller/SoruController.class
 com/example/backend/dto/CreateDenemeSinaviRequest.class
+com/example/backend/model/DenemeSinaviCevap.class
 com/example/backend/model/DenemeSinavi.class
 com/example/backend/dto/DenemeSinaviSoruDTO.class
 com/example/backend/repository/QuizOturumuRepository.class
@@ -75,3 +76,5 @@ com/example/backend/model/Secenek.class
 com/example/backend/dto/RegisterRequest.class
 com/example/backend/repository/AppUserRepository.class
 com/example/backend/controller/RaporController.class
+com/example/backend/controller/CevapController.class
+com/example/backend/repository/DenemeSinaviCevapRepository.class

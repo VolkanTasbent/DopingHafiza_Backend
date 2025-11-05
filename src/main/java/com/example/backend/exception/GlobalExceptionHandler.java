@@ -42,8 +42,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAny(Exception ex) {
-        // Prod’da burada loglama (Sentry vb.) önerilir
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", ex.getMessage(), "status", 500));
+        System.err.println("❌ Global exception handler: " + ex.getMessage());
+        ex.printStackTrace();
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", ex.getMessage() != null ? ex.getMessage() : "Bilinmeyen hata");
+        body.put("status", 500);
+        body.put("type", ex.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

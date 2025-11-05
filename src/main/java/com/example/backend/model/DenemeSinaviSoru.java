@@ -54,6 +54,12 @@ public class DenemeSinaviSoru {
     @Column(name = "aciklama", columnDefinition = "TEXT")
     private String aciklama;
 
+    @Column(name = "cozum_videosu_url", length = 500)
+    private String cozumVideosuUrl;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "olusturma_tarihi")
     private OffsetDateTime olusturmaTarihi;
 
@@ -106,6 +112,12 @@ public class DenemeSinaviSoru {
 
     public String getAciklama() { return aciklama; }
     public void setAciklama(String aciklama) { this.aciklama = aciklama; }
+
+    public String getCozumVideosuUrl() { return cozumVideosuUrl; }
+    public void setCozumVideosuUrl(String cozumVideosuUrl) { this.cozumVideosuUrl = cozumVideosuUrl; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public OffsetDateTime getOlusturmaTarihi() { return olusturmaTarihi; }
     public void setOlusturmaTarihi(OffsetDateTime olusturmaTarihi) { this.olusturmaTarihi = olusturmaTarihi; }

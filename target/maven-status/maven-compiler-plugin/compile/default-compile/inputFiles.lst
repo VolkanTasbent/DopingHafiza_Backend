@@ -3,6 +3,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/config/WebConfig.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/AdminController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/AuthController.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/CevapController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/CozumController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DenemeSinaviController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DenemeSinaviFrontendController.java
@@ -47,6 +48,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Cevap.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/CozumKaydi.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/DenemeSinavi.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/DenemeSinaviCevap.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/DenemeSinaviSoru.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Ders.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/model/Konu.java
@@ -56,6 +58,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/AppUserRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/CevapRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/CozumKaydiRepository.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DenemeSinaviCevapRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DenemeSinaviRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DenemeSinaviSoruRepository.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/repository/DersRepository.java

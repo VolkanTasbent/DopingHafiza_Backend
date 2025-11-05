@@ -22,3 +22,4 @@ public interface DenemeSinaviSoruRepository extends JpaRepository<DenemeSinaviSo
     void deleteByDenemeSinavi(DenemeSinavi denemeSinavi);
 }
 
+

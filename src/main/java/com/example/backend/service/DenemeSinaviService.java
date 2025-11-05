@@ -85,7 +85,94 @@ public class DenemeSinaviService {
         denemeRepo.delete(ds);
     }
 
-    /** Deneme sınavı sorularını getir */
+    /** Tüm deneme sınavı sorularını getir - SoruDTO formatında (Admin panel için) */
+    @Transactional(readOnly = true)
+    public List<com.example.backend.dto.SoruDTO> getAllSorularAsSoruDTO() {
+        return soruRepo.findAll().stream()
+                .sorted((a, b) -> {
+                    // Önce deneme sınavı ID'sine göre, sonra soru numarasına göre sırala
+                    Long denemeIdA = a.getDenemeSinavi() != null ? a.getDenemeSinavi().getId() : 0L;
+                    Long denemeIdB = b.getDenemeSinavi() != null ? b.getDenemeSinavi().getId() : 0L;
+                    int denemeCompare = denemeIdA.compareTo(denemeIdB);
+                    if (denemeCompare != 0) return denemeCompare;
+                    return Integer.compare(
+                        a.getSoruNo() != null ? a.getSoruNo() : 0,
+                        b.getSoruNo() != null ? b.getSoruNo() : 0
+                    );
+                })
+                .map(this::convertDenemeSoruToSoruDTO)
+                .toList();
+    }
+    
+    /** DenemeSinaviSoru'yu SoruDTO'ya çevir (helper method) */
+    private com.example.backend.dto.SoruDTO convertDenemeSoruToSoruDTO(DenemeSinaviSoru s) {
+        // Şıkları SecenekDTO listesine çevir
+        // DENEME SINAVI İÇİN: Fake ID = soruId * 1000 + sıralama
+        List<com.example.backend.dto.SecenekDTO> secenekler = new ArrayList<>();
+        int siralama = 1;
+        if (s.getSikA() != null && !s.getSikA().trim().isEmpty()) {
+            Long fakeId = s.getId() * 1000L + siralama;
+            secenekler.add(new com.example.backend.dto.SecenekDTO(fakeId, s.getSikA().trim(), 
+                s.getDogruCevap() != null && s.getDogruCevap().equalsIgnoreCase("A"), siralama++));
+        }
+        if (s.getSikB() != null && !s.getSikB().trim().isEmpty()) {
+            Long fakeId = s.getId() * 1000L + siralama;
+            secenekler.add(new com.example.backend.dto.SecenekDTO(fakeId, s.getSikB().trim(), 
+                s.getDogruCevap() != null && s.getDogruCevap().equalsIgnoreCase("B"), siralama++));
+        }
+        if (s.getSikC() != null && !s.getSikC().trim().isEmpty()) {
+            Long fakeId = s.getId() * 1000L + siralama;
+            secenekler.add(new com.example.backend.dto.SecenekDTO(fakeId, s.getSikC().trim(), 
+                s.getDogruCevap() != null && s.getDogruCevap().equalsIgnoreCase("C"), siralama++));
+        }
+        if (s.getSikD() != null && !s.getSikD().trim().isEmpty()) {
+            Long fakeId = s.getId() * 1000L + siralama;
+            secenekler.add(new com.example.backend.dto.SecenekDTO(fakeId, s.getSikD().trim(), 
+                s.getDogruCevap() != null && s.getDogruCevap().equalsIgnoreCase("D"), siralama++));
+        }
+        if (s.getSikE() != null && !s.getSikE().trim().isEmpty()) {
+            Long fakeId = s.getId() * 1000L + siralama;
+            secenekler.add(new com.example.backend.dto.SecenekDTO(fakeId, s.getSikE().trim(), 
+                s.getDogruCevap() != null && s.getDogruCevap().equalsIgnoreCase("E"), siralama++));
+        }
+        
+        // Konuları parse et (virgülle ayrılmış string)
+        List<com.example.backend.dto.KonuDTO> konular = new ArrayList<>();
+        if (s.getKonular() != null && !s.getKonular().trim().isEmpty()) {
+            String[] konuAdlari = s.getKonular().split(",");
+            for (String konuAdi : konuAdlari) {
+                String trimmed = konuAdi.trim();
+                if (!trimmed.isEmpty()) {
+                    konular.add(new com.example.backend.dto.KonuDTO(null, trimmed, "", "", ""));
+                }
+            }
+        }
+        
+        return new com.example.backend.dto.SoruDTO(
+            s.getId(),
+            s.getSoruMetni() != null ? s.getSoruMetni() : "",
+            "coktan_secmeli",
+            s.getZorluk(),
+            s.getImageUrl() != null ? s.getImageUrl() : "",
+            s.getDers() != null && s.getDers().getAd() != null ? s.getDers().getAd() : "",
+            konular,
+            secenekler,
+            s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : ""
+        );
+    }
+
+    /** Deneme sınavı sorularını getir - SoruDTO formatında (seçenekler dahil) */
+    @Transactional(readOnly = true)
+    public List<com.example.backend.dto.SoruDTO> getSorularAsSoruDTO(Long denemeId) {
+        DenemeSinavi ds = denemeRepo.findById(denemeId)
+                .orElseThrow(() -> new IllegalArgumentException("Deneme sınavı bulunamadı: " + denemeId));
+        
+        return soruRepo.findByDenemeSinaviOrderBySoruNoAsc(ds).stream()
+                .map(this::convertDenemeSoruToSoruDTO)
+                .toList();
+    }
+
+    /** Deneme sınavı sorularını getir - Eski format (geriye dönük uyumluluk için) */
     @Transactional(readOnly = true)
     public List<DenemeSinaviSoruDTO> getSorular(Long denemeId) {
         DenemeSinavi ds = denemeRepo.findById(denemeId)
@@ -147,11 +234,13 @@ public class DenemeSinaviService {
         if (req.soruMetni() != null && !req.soruMetni().isBlank()) {
             soru.setSoruMetni(req.soruMetni().trim());
         }
-        if (req.sikA() != null) soru.setSikA(req.sikA());
-        if (req.sikB() != null) soru.setSikB(req.sikB());
-        if (req.sikC() != null) soru.setSikC(req.sikC());
-        if (req.sikD() != null) soru.setSikD(req.sikD());
-        if (req.sikE() != null) soru.setSikE(req.sikE());
+        // Şıkları her zaman güncelle (null ise sil, dolu ise güncelle)
+        // NOT: Bu sayede frontend boş şıkları silmek için null gönderebilir
+        soru.setSikA(req.sikA());
+        soru.setSikB(req.sikB());
+        soru.setSikC(req.sikC());
+        soru.setSikD(req.sikD());
+        soru.setSikE(req.sikE());
         if (req.dogruCevap() != null) {
             soru.setDogruCevap(req.dogruCevap().toUpperCase());
         }
@@ -169,6 +258,14 @@ public class DenemeSinaviService {
                     .orElseThrow(() -> new IllegalArgumentException("Ders bulunamadı: " + req.dersId()));
             soru.setDers(ders);
         }
+        if (req.cozumVideosuUrl() != null) {
+            String trimmed = req.cozumVideosuUrl().trim();
+            soru.setCozumVideosuUrl(trimmed.isEmpty() ? null : trimmed);
+        }
+        if (req.imageUrl() != null) {
+            String trimmed = req.imageUrl().trim();
+            soru.setImageUrl(trimmed.isEmpty() ? null : trimmed);
+        }
 
         soru = soruRepo.save(soru);
         return soruToDTO(soru);
@@ -181,6 +278,19 @@ public class DenemeSinaviService {
             throw new IllegalArgumentException("Soru bulunamadı: " + soruId);
         }
         soruRepo.deleteById(soruId);
+    }
+
+    /** Deneme sınavı sorusu çözüm videosu URL'ini güncelle */
+    @Transactional
+    public DenemeSinaviSoruDTO updateSoruCozumVideosu(Long soruId, String videoUrl) {
+        DenemeSinaviSoru soru = soruRepo.findById(soruId)
+                .orElseThrow(() -> new IllegalArgumentException("Soru bulunamadı: " + soruId));
+        
+        String trimmed = videoUrl != null ? videoUrl.trim() : null;
+        soru.setCozumVideosuUrl(trimmed != null && !trimmed.isEmpty() ? trimmed : null);
+        
+        soru = soruRepo.save(soru);
+        return soruToDTO(soru);
     }
 
     /** CSV'den toplu soru yükleme */
@@ -324,7 +434,18 @@ public class DenemeSinaviService {
         return field.trim();
     }
 
-    /** Deneme sınavı sorularını quiz için getir */
+    /** Deneme sınavı sorularını quiz için getir - SoruDTO formatında (seçenekler dahil) */
+    @Transactional(readOnly = true)
+    public List<com.example.backend.dto.SoruDTO> getSorularForQuizAsSoruDTO(Long denemeId) {
+        DenemeSinavi ds = denemeRepo.findById(denemeId)
+                .orElseThrow(() -> new IllegalArgumentException("Deneme sınavı bulunamadı: " + denemeId));
+        
+        return soruRepo.findByDenemeSinaviOrderBySoruNoAsc(ds).stream()
+                .map(this::convertDenemeSoruToSoruDTO)
+                .toList();
+    }
+
+    /** Deneme sınavı sorularını quiz için getir - Eski format (geriye dönük uyumluluk için) */
     @Transactional(readOnly = true)
     public List<DenemeSinaviSoruDTOForQuiz> getSorularForQuiz(Long denemeId) {
         DenemeSinavi ds = denemeRepo.findById(denemeId)
@@ -346,6 +467,14 @@ public class DenemeSinaviService {
                     s.getKonular()
                 ))
                 .toList();
+    }
+
+    /** Tek deneme sınavı sorusu getir (ID ile) */
+    @Transactional(readOnly = true)
+    public DenemeSinaviSoruDTO getSoruById(Long soruId) {
+        DenemeSinaviSoru soru = soruRepo.findById(soruId)
+                .orElseThrow(() -> new IllegalArgumentException("Deneme sınavı sorusu bulunamadı: " + soruId));
+        return soruToDTO(soru);
     }
 
     // ---- DTO dönüşümleri ----
@@ -378,6 +507,8 @@ public class DenemeSinaviService {
             soru.getZorluk(),
             soru.getKonular(),
             soru.getAciklama(),
+            soru.getCozumVideosuUrl() != null ? soru.getCozumVideosuUrl() : "",
+            soru.getImageUrl() != null ? soru.getImageUrl() : "",
             soru.getOlusturmaTarihi() != null ? soru.getOlusturmaTarihi().toInstant() : Instant.now()
         );
     }

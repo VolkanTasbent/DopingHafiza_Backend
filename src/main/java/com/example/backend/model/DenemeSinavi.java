@@ -46,3 +46,4 @@ public class DenemeSinavi {
     public void setAciklama(String aciklama) { this.aciklama = aciklama; }
 }
 
+

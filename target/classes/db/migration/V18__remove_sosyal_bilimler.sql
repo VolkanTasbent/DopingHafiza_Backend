@@ -32,3 +32,4 @@ WHERE ders_id IN (SELECT id FROM ders WHERE ad = 'Sosyal Bilimler');
 -- Dersi sil
 DELETE FROM ders WHERE ad = 'Sosyal Bilimler';
 
+

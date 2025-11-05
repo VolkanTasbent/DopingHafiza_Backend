@@ -56,10 +56,16 @@ public class SecurityConfig {
 
                         // Kullanıcı uçları
                         .requestMatchers(GET, "/api/users/me").authenticated()
+                        .requestMatchers(POST, "/api/quiz/**").authenticated() // Quiz submit
+                        .requestMatchers(POST, "/api/cevap/**").authenticated() // Cevap submit (deneme sınavı)
+                        // Deneme sınavı submit endpoint'leri (frontend) - pattern'leri düzeltildi
+                        .requestMatchers(POST, "/api/deneme-sinavi/*/submit").authenticated()
+                        .requestMatchers(POST, "/api/deneme-sinavi/*/cevap").authenticated()
+                        .requestMatchers(POST, "/api/deneme-sinavi/*/cevaplar").authenticated()
+                        .requestMatchers(POST, "/api/deneme-sinavlari/*/submit").authenticated() // Deneme sınavı submit (backend)
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(POST, "/api/files/upload").hasRole("ADMIN")
-                        .requestMatchers("/files/**").permitAll()                  // statik dosyalar
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/files/upload").hasRole("ADMIN")
+                        .requestMatchers("/files/**").permitAll()                  // statik dosyalar (GET) - önce kontrol et
+                        .requestMatchers("/api/files/**").hasRole("ADMIN") // Tüm file işlemleri ADMIN için
 
 
                         // Geri kalan her şey auth ister

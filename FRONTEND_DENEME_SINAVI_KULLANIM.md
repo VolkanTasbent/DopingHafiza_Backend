@@ -253,3 +253,4 @@ curl -X POST http://localhost:8080/api/deneme-sinavlari/1/sorular \
 2. **ID Kullanımı:** Soru eklerken `denemeId` parametresi zorunlu
 3. **Liste Güncelleme:** Soru eklendikten sonra deneme listesini yenileyin (soru sayısı güncellenir)
 
+

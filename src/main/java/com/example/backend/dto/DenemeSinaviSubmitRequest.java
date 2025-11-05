@@ -10,3 +10,4 @@ public record DenemeSinaviSubmitRequest(
     List<DenemeSinaviSubmitItemDTO> items // soruNo -> seçilen şık (A, B, C, D, E veya null)
 ) {}
 
+

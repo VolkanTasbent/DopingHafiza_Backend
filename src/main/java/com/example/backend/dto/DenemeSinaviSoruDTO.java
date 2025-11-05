@@ -18,6 +18,8 @@ public record DenemeSinaviSoruDTO(
     Integer zorluk,
     String konular, // Virgülle ayrılmış
     String aciklama,
+    String cozumVideosuUrl,
+    String imageUrl,
     Instant olusturmaTarihi
 ) {}
 

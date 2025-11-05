@@ -37,3 +37,4 @@ CREATE INDEX IF NOT EXISTS idx_deneme_sinavi_tip ON deneme_sinavi(tip);
 CREATE INDEX IF NOT EXISTS idx_deneme_sinavi_soru_deneme_id ON deneme_sinavi_soru(deneme_sinavi_id);
 CREATE INDEX IF NOT EXISTS idx_deneme_sinavi_soru_no ON deneme_sinavi_soru(deneme_sinavi_id, soru_no);
 
+

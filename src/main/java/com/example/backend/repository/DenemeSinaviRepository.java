@@ -12,3 +12,4 @@ public interface DenemeSinaviRepository extends JpaRepository<DenemeSinavi, Long
     List<DenemeSinavi> findAllByOrderByOlusturmaTarihiDesc();
 }
 
+

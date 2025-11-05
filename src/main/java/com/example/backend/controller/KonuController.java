@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/konu")
+@RequestMapping({"/api/konu", "/api/konular"}) // Hem tekil hem çoğul destekle
 @CrossOrigin(origins = {"http://localhost:5173","http://localhost:3000"}, allowCredentials = "true")
 public class KonuController {
 

@@ -6,3 +6,4 @@ COMMENT ON COLUMN deneme_sinavi_soru.ders_id IS 'Sorunun ait olduğu ders (Matem
 
 CREATE INDEX IF NOT EXISTS idx_deneme_sinavi_soru_ders ON deneme_sinavi_soru(ders_id);
 
+

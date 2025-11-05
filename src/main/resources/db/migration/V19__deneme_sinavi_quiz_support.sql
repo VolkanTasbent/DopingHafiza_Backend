@@ -6,3 +6,4 @@ COMMENT ON COLUMN quiz_oturumu.deneme_sinavi_id IS 'Eğer bu oturum bir deneme s
 
 CREATE INDEX IF NOT EXISTS idx_quiz_oturumu_deneme_sinavi ON quiz_oturumu(deneme_sinavi_id);
 
+
