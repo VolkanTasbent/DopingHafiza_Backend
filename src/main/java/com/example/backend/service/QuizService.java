@@ -130,12 +130,12 @@ public class QuizService {
         return page.getContent().stream()
                 .map(o -> {
                     // Net hesapla: Doğru - (Yanlış / 4)
-                    double net = (o.getCorrect() != null ? o.getCorrect() : 0) 
-                               - ((o.getWrong() != null ? o.getWrong() : 0) / 4.0);
+                    double net = (o.getCorrect() != null ? o.getCorrect() : 0)
+                            - ((o.getWrong() != null ? o.getWrong() : 0) / 4.0);
                     return new RaporOzetDTO(
                             o.getId(),
-                            o.getFinishedAt(),
-                            o.getTotal(),
+                            o.getFinishedAt(), // Instant olarak doğrudan
+                            o.getTotal(),      // totalCount olarak
                             o.getCorrect(),
                             o.getWrong(),
                             o.getEmpty(),
@@ -180,7 +180,7 @@ public class QuizService {
 
     /** Deneme sınavı detaylarını getirir */
     @Transactional(readOnly = true)
-    private RaporDetayDTO getDenemeSinaviDetay(QuizOturumu oturum) {
+    protected RaporDetayDTO getDenemeSinaviDetay(QuizOturumu oturum) {
         DenemeSinavi deneme = oturum.getDenemeSinavi();
         List<DenemeSinaviSoru> sorular = denemeSoruRepo.findByDenemeSinaviOrderBySoruNoAsc(deneme);
         List<DenemeSinaviCevap> cevaplar = denemeCevapRepo.findByOturumOrderBySoruNoAsc(oturum);
@@ -400,4 +400,5 @@ public class QuizService {
 
         return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
+
 }

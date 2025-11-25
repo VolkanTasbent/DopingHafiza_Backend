@@ -1,14 +1,16 @@
 package com.example.backend.dto;
 
 import java.time.Instant;
+import java.util.List;
 
-public record RaporOzetDTO(
+// Sadece grafikler için özel DTO
+public record GrafikRaporDTO(
         Long oturumId,
         Instant finishedAt,  // Instant olarak değiştir
-        Integer totalCount,  // totalCount olarak değiştir (frontend uyumluluğu için)
         Integer correctCount,
         Integer wrongCount,
         Integer emptyCount,
         Long durationMs,
-        Double net
+        Double net,
+        List<RaporDetayItemDTO> items
 ) {}
