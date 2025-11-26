@@ -107,7 +107,7 @@ public class QuizService {
         // YKS Net Hesaplama: Net = Doğru - (Yanlış / 4)
         // Her doğru +1 net, her yanlış -0.25 net
         double net = correct - (wrong / 4.0);
-        
+
         oturum.setTotal(total);
         oturum.setCorrect(correct);
         oturum.setWrong(wrong);
@@ -146,7 +146,7 @@ public class QuizService {
                 .toList();
     }
 
-    /** ✅ Rapor detaylarını getirir (LazyInitialization fix + DTO dönüşümü) */
+    /** ✅ Rapor detaylarını getirir (LazyInitialization fix + DTO dönüşümü) - DERS BİLGİSİ EKLENDİ */
     @Transactional(readOnly = true)
     public RaporDetayDTO detayForUser(AppUser user, Long oturumId, boolean isAdmin) {
         QuizOturumu o = isAdmin
@@ -161,12 +161,22 @@ public class QuizService {
             return getDenemeSinaviDetay(o);
         }
 
-        // Normal quiz için
+        // Normal quiz için - DERS BİLGİSİ İLE BİRLİKTE
         var list = cevapRepo.findByOturum(o);
+
+        // Debug: Ders bilgisi kontrolü
+        System.out.println("🔍 Rapor detayı için " + list.size() + " cevap bulundu");
+        if (!list.isEmpty()) {
+            Soru ilkSoru = list.get(0).getSoru();
+            String dersAdi = ilkSoru.getDers() != null ?
+                    (ilkSoru.getDers().getAd() != null ? ilkSoru.getDers().getAd() : "Ders Adı Yok") :
+                    "Ders Entity Yok";
+            System.out.println("📚 İlk soru ders bilgisi: " + dersAdi);
+        }
 
         var items = list.stream().map(c -> {
             Soru s = c.getSoru(); // Lazy fix - transactional açık
-            var sDto = mapToSoruDTO(s);
+            var sDto = mapToSoruDTO(s); // Bu metod artık ders bilgisini içeriyor
             return new RaporDetayItemDTO(
                     c.getId(),
                     sDto,
@@ -184,20 +194,20 @@ public class QuizService {
         DenemeSinavi deneme = oturum.getDenemeSinavi();
         List<DenemeSinaviSoru> sorular = denemeSoruRepo.findByDenemeSinaviOrderBySoruNoAsc(deneme);
         List<DenemeSinaviCevap> cevaplar = denemeCevapRepo.findByOturumOrderBySoruNoAsc(oturum);
-        
+
         // Cevap map'i oluştur (soruNo -> cevap)
         Map<Integer, DenemeSinaviCevap> cevapMap = cevaplar.stream()
                 .collect(java.util.stream.Collectors.toMap(DenemeSinaviCevap::getSoruNo, c -> c));
-        
+
         var items = sorular.stream().map(soru -> {
             // Deneme sınavı sorularını SoruDTO formatına çevir
             var sDto = convertDenemeSoruToSoruDTO(soru);
-            
+
             // Cevap bilgisini bul
             DenemeSinaviCevap cevap = cevapMap.get(soru.getSoruNo());
             Boolean dogruMu = cevap != null ? cevap.isDogru() : null;
             Long secenekId = null;
-            
+
             // Seçilen cevabı fake ID'ye çevir
             if (cevap != null && cevap.getSecilenCevap() != null) {
                 String secilen = cevap.getSecilenCevap().trim().toUpperCase();
@@ -207,7 +217,7 @@ public class QuizService {
                     secenekId = soru.getId() * 1000L + siralama;
                 }
             }
-            
+
             // Unique ID oluştur: cevap varsa cevap ID, yoksa soru ID + soruNo kombinasyonu
             // Bu sayede her item için benzersiz bir ID garantilenir
             Long uniqueId;
@@ -218,7 +228,7 @@ public class QuizService {
                 // Örnek: Soru ID=109, SoruNo=5 -> 1090005
                 uniqueId = soru.getId() * 10000L + soru.getSoruNo();
             }
-            
+
             return new RaporDetayItemDTO(
                     uniqueId,
                     sDto,
@@ -237,28 +247,28 @@ public class QuizService {
         int siralama = 1;
         if (soru.getSikA() != null && !soru.getSikA().trim().isEmpty()) {
             Long fakeId = soru.getId() * 1000L + siralama;
-            secenekler.add(new SecenekDTO(fakeId, soru.getSikA().trim(), 
-                soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("A"), siralama++));
+            secenekler.add(new SecenekDTO(fakeId, soru.getSikA().trim(),
+                    soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("A"), siralama++));
         }
         if (soru.getSikB() != null && !soru.getSikB().trim().isEmpty()) {
             Long fakeId = soru.getId() * 1000L + siralama;
-            secenekler.add(new SecenekDTO(fakeId, soru.getSikB().trim(), 
-                soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("B"), siralama++));
+            secenekler.add(new SecenekDTO(fakeId, soru.getSikB().trim(),
+                    soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("B"), siralama++));
         }
         if (soru.getSikC() != null && !soru.getSikC().trim().isEmpty()) {
             Long fakeId = soru.getId() * 1000L + siralama;
-            secenekler.add(new SecenekDTO(fakeId, soru.getSikC().trim(), 
-                soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("C"), siralama++));
+            secenekler.add(new SecenekDTO(fakeId, soru.getSikC().trim(),
+                    soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("C"), siralama++));
         }
         if (soru.getSikD() != null && !soru.getSikD().trim().isEmpty()) {
             Long fakeId = soru.getId() * 1000L + siralama;
-            secenekler.add(new SecenekDTO(fakeId, soru.getSikD().trim(), 
-                soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("D"), siralama++));
+            secenekler.add(new SecenekDTO(fakeId, soru.getSikD().trim(),
+                    soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("D"), siralama++));
         }
         if (soru.getSikE() != null && !soru.getSikE().trim().isEmpty()) {
             Long fakeId = soru.getId() * 1000L + siralama;
-            secenekler.add(new SecenekDTO(fakeId, soru.getSikE().trim(), 
-                soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("E"), siralama++));
+            secenekler.add(new SecenekDTO(fakeId, soru.getSikE().trim(),
+                    soru.getDogruCevap() != null && soru.getDogruCevap().equalsIgnoreCase("E"), siralama++));
         }
 
         // Konuları parse et
@@ -279,22 +289,39 @@ public class QuizService {
                 "coktan_secmeli",
                 soru.getZorluk(),
                 "",
-                soru.getDers() != null && soru.getDers().getAd() != null ? soru.getDers().getAd() : "",
+                soru.getDers() != null && soru.getDers().getAd() != null ? soru.getDers().getAd() : "Genel",
                 konular,
                 secenekler,
                 soru.getCozumVideosuUrl() != null ? soru.getCozumVideosuUrl() : ""
         );
     }
 
-    /** ✅ Soru -> DTO dönüşümü */
+    /** ✅ Soru -> DTO dönüşümü - DERS BİLGİSİ EKLENDİ */
     private SoruDTO mapToSoruDTO(Soru s) {
+        // Ders bilgisini kontrol et ve işle
+        String dersAdi = "Genel"; // Varsayılan değer
+
+        if (s.getDers() != null) {
+            // Ders entity'sini kontrol et
+            Ders ders = s.getDers();
+            if (ders.getAd() != null && !ders.getAd().trim().isEmpty()) {
+                dersAdi = ders.getAd().trim();
+            } else {
+                System.out.println("⚠️ UYARI: Soru " + s.getId() + " için ders adı boş!");
+                dersAdi = "Ders Adı Yok";
+            }
+        } else {
+            System.out.println("⚠️ UYARI: Soru " + s.getId() + " için ders bilgisi yok!");
+            dersAdi = "Genel";
+        }
+
         var konular = s.getKonular().stream()
                 .map(k -> new KonuDTO(
-                    k.getId(), 
-                    k.getAd() != null ? k.getAd() : "", 
-                    k.getDokumanUrl() != null ? k.getDokumanUrl() : "", 
-                    k.getDokumanAdi() != null ? k.getDokumanAdi() : "", 
-                    k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : ""))
+                        k.getId(),
+                        k.getAd() != null ? k.getAd() : "",
+                        k.getDokumanUrl() != null ? k.getDokumanUrl() : "",
+                        k.getDokumanAdi() != null ? k.getDokumanAdi() : "",
+                        k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : ""))
                 .toList();
 
         var secenekler = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
@@ -307,7 +334,7 @@ public class QuizService {
                 s.getTip() != null ? s.getTip() : "",
                 s.getZorluk(),
                 s.getImageUrl() != null ? s.getImageUrl() : "",
-                s.getDers() != null && s.getDers().getAd() != null ? s.getDers().getAd() : "",
+                dersAdi, // DÜZELTİLDİ: Ders bilgisi eklendi
                 konular,
                 secenekler,
                 s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : ""
@@ -359,7 +386,7 @@ public class QuizService {
         for (DenemeSinaviSoru soru : sorular) {
             String secilen = cevaplar.get(soru.getSoruNo());
             boolean bosmu = (secilen == null || secilen.trim().isEmpty());
-            
+
             boolean dogru = false;
             if (!bosmu) {
                 String dogruCevap = soru.getDogruCevap();
@@ -400,5 +427,4 @@ public class QuizService {
 
         return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
-
 }

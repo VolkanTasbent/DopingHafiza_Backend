@@ -5,4 +5,5 @@ public record RaporDetayItemDTO(
         SoruDTO soru,
         Long secenekId,          // kullanıcının seçtiği
         Boolean dogru
+
 ) {}
