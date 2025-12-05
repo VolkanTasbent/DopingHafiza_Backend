@@ -24,4 +24,16 @@ public interface SoruRepository extends JpaRepository<Soru, Long> {
 
     @Query("select max(s.soruNo) from Soru s where s.ders = :ders")
     Integer findMaxSoruNoByDers(@Param("ders") Ders ders);
+
+    // 🔥 FLASHCARD İÇİN — Derse göre RASTGELE 20 soru
+    // FlashCard için rastgele soru getiren metod
+    // FlashCard için rastgele soru getiren metod - DÜZELTİLMİŞ VERSİYON
+    @Query("""
+    SELECT s FROM Soru s
+    LEFT JOIN FETCH s.secenekler
+    WHERE s.ders.id = :dersId
+    ORDER BY RANDOM()
+    """)
+    List<Soru> findRandomQuestionsWithSecenek(@Param("dersId") Long dersId);
+
 }

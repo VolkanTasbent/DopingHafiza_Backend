@@ -29,6 +29,9 @@ public class AppUser {
     @Column(length = 500)
     private String avatarUrl;
 
+    @Column(name = "hedef_siralama")
+    private Integer hedefSiralama;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -48,4 +51,7 @@ public class AppUser {
     
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public Integer getHedefSiralama() { return hedefSiralama; }
+    public void setHedefSiralama(Integer hedefSiralama) { this.hedefSiralama = hedefSiralama; }
 }

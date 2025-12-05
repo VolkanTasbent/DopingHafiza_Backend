@@ -32,7 +32,7 @@ public class UsersController {
             roleToShow = u.getRole();
         }
         
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl(), u.getHedefSiralama());
     }
 
     @PutMapping("/me")
@@ -57,6 +57,11 @@ public class UsersController {
             user.setAvatarUrl(dto.getAvatarUrl());
         }
         
+        // Hedef sıralama güncellemesi
+        if (dto.getHedefSiralama() != null) {
+            user.setHedefSiralama(dto.getHedefSiralama());
+        }
+        
         AppUser savedUser = repo.save(user);
         
         // Rol bilgisi sadece ADMIN'lere gösterilir
@@ -72,7 +77,8 @@ public class UsersController {
             savedUser.getAd(), 
             savedUser.getSoyad(), 
             roleToShow, 
-            savedUser.getAvatarUrl()
+            savedUser.getAvatarUrl(),
+            savedUser.getHedefSiralama()
         );
         
         return ResponseEntity.ok(response);
@@ -82,7 +88,7 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<AuthUserDTO> all() {
         return repo.findAll().stream()
-                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl()))
+                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), u.getHedefSiralama()))
                 .toList();
     }
 }

@@ -13,12 +13,10 @@ public class Soru {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // soru.ders_id -> ders(id)
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "ders_id")
     private Ders ders;
 
-    // N:N -> soru_konu(soru_id, konu_id)
     @ManyToMany
     @JoinTable(
             name = "soru_konu",
@@ -31,9 +29,9 @@ public class Soru {
     private String metin;
 
     @Column(length = 40)
-    private String tip;              // "coktan_secmeli" vb.
+    private String tip;
 
-    private Integer zorluk;          // 1-5
+    private Integer zorluk;
 
     @Column(name = "soru_no")
     private Integer soruNo;
@@ -47,9 +45,12 @@ public class Soru {
     @Column(name = "cozum_videosu_url", length = 500)
     private String cozumVideosuUrl;
 
-    // DB'de timestamptz ile uyumlu
     @Column(name = "olusturma_tarihi")
     private OffsetDateTime olusturmaTarihi;
+
+    // 🔥 FLASHCARD İÇİN GEREKLİ: SEÇENEKLER
+    @OneToMany(mappedBy = "soru", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Secenek> secenekler = new LinkedHashSet<>();
 
     @PrePersist
     protected void onCreate() {
@@ -58,7 +59,7 @@ public class Soru {
         }
     }
 
-    // ---- getters / setters ----
+    // ---- GETTER - SETTER ----
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -67,8 +68,6 @@ public class Soru {
 
     public Set<Konu> getKonular() { return konular; }
     public void setKonular(Set<Konu> konular) { this.konular = konular; }
-    public void addKonu(Konu k) { this.konular.add(k); }
-    public void removeKonu(Konu k) { this.konular.remove(k); }
 
     public String getMetin() { return metin; }
     public void setMetin(String metin) { this.metin = metin; }
@@ -93,4 +92,13 @@ public class Soru {
 
     public OffsetDateTime getOlusturmaTarihi() { return olusturmaTarihi; }
     public void setOlusturmaTarihi(OffsetDateTime olusturmaTarihi) { this.olusturmaTarihi = olusturmaTarihi; }
+
+    // 🔥 FLASHCARD İÇİN EKLENEN GETTER → BU OLMADIĞI İÇİN HATA ALIYORDUN!
+    public Set<Secenek> getSecenekler() {
+        return secenekler;
+    }
+
+    public void setSecenekler(Set<Secenek> secenekler) {
+        this.secenekler = secenekler;
+    }
 }

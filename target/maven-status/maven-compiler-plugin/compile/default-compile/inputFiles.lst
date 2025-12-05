@@ -9,6 +9,7 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DenemeSinaviFrontendController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/DersController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/FileController.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/FlashCardController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/HealthController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/KonuController.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/controller/QuizController.java
@@ -26,6 +27,8 @@
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSoruDTOForQuiz.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSubmitItemDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/DenemeSinaviSubmitRequest.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/FlashCardDTO.java
+/Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/GrafikRaporDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/KonuDTO.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginRequest.java
 /Users/volkantasbent/Desktop/spring-backend-starter/src/main/java/com/example/backend/dto/LoginResponse.java

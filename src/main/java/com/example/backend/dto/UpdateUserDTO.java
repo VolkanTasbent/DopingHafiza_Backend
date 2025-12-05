@@ -5,6 +5,7 @@ public class UpdateUserDTO {
     private String soyad;
     private String email;
     private String avatarUrl;
+    private Integer hedefSiralama;
 
     // Getters ve Setters
     public String getAd() { return ad; }
@@ -18,6 +19,9 @@ public class UpdateUserDTO {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public Integer getHedefSiralama() { return hedefSiralama; }
+    public void setHedefSiralama(Integer hedefSiralama) { this.hedefSiralama = hedefSiralama; }
 }
 
 

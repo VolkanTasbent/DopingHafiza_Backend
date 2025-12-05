@@ -188,7 +188,8 @@ public class FileController {
             user.getAd(), 
             user.getSoyad(), 
             user.getRole(), 
-            user.getAvatarUrl()
+            user.getAvatarUrl(),
+            user.getHedefSiralama()
         );
     }
 

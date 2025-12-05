@@ -13,11 +13,24 @@ public interface CozumKaydiRepository extends JpaRepository<CozumKaydi, Long> {
 
     List<CozumKaydi> findByUserIdAndKonuId(Long userId, Long konuId);
 
-    @Query("SELECT c.konu.ad, COUNT(c), SUM(CASE WHEN c.dogruMu = true THEN 1 ELSE 0 END) " +
-            "FROM CozumKaydi c WHERE c.user.id = :userId GROUP BY c.konu.ad")
+    @Query("""
+            SELECT c.konu.ad, COUNT(c), 
+                   SUM(CASE WHEN c.dogruMu = true THEN 1 ELSE 0 END)
+            FROM CozumKaydi c
+            WHERE c.user.id = :userId
+            GROUP BY c.konu.ad
+            """)
     List<Object[]> getKonuBazliAnaliz(Long userId);
 
-    @Query("SELECT c.tarih, COUNT(c), SUM(CASE WHEN c.dogruMu = true THEN 1 ELSE 0 END) " +
-            "FROM CozumKaydi c WHERE c.user.id = :userId GROUP BY c.tarih ORDER BY c.tarih")
+    @Query("""
+            SELECT c.tarih, COUNT(c), 
+                   SUM(CASE WHEN c.dogruMu = true THEN 1 ELSE 0 END)
+            FROM CozumKaydi c
+            WHERE c.user.id = :userId
+            GROUP BY c.tarih
+            ORDER BY c.tarih
+            """)
     List<Object[]> getGelisimGrafikVerisi(Long userId);
+
+    // ❌ BURADAKİ FLASHCARD SORGUSUNU SİLDİK
 }

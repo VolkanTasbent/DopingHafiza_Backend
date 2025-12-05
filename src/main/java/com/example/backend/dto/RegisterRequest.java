@@ -9,5 +9,6 @@ public record RegisterRequest(
         @NotBlank String ad,
         @NotBlank String soyad,
         @Size(min = 6, message = "Şifre en az 6 karakter olmalı")
-        String password
+        String password,
+        Integer hedefSiralama
 ) {}
