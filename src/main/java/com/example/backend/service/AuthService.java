@@ -33,8 +33,12 @@ public class AuthService {
         u.setEnabled(true);
         u.setAvatarUrl(null); // Başlangıçta profil resmi yok
         u.setHedefSiralama(r.hedefSiralama()); // Hedef sıralama
+        u.setHedefUniversite(r.hedefUniversite()); // Hedef üniversite
+        u.setHedefBolum(r.hedefBolum()); // Hedef bölüm
+        u.setHedefPuan(r.hedefPuan()); // Hedef puan
         u = repo.save(u);
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), u.getHedefSiralama());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
+                u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan());
     }
 
     public LoginResponse login(LoginRequest r) {
@@ -43,7 +47,8 @@ public class AuthService {
         // Başarılı ise token üret
         String token = jwt.generate(r.email());
         AppUser u = repo.findByEmail(r.email()).orElseThrow();
-        var userDto = new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), u.getHedefSiralama());
+        var userDto = new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
+                u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan());
         return new LoginResponse(token, userDto);
     }
 }

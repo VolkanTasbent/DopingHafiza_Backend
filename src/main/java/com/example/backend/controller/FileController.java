@@ -189,7 +189,10 @@ public class FileController {
             user.getSoyad(), 
             user.getRole(), 
             user.getAvatarUrl(),
-            user.getHedefSiralama()
+            user.getHedefSiralama(),
+            user.getHedefUniversite(),
+            user.getHedefBolum(),
+            user.getHedefPuan()
         );
     }
 

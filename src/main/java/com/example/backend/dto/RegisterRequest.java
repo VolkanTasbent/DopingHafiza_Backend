@@ -10,5 +10,8 @@ public record RegisterRequest(
         @NotBlank String soyad,
         @Size(min = 6, message = "Şifre en az 6 karakter olmalı")
         String password,
-        Integer hedefSiralama
+        Integer hedefSiralama,
+        String hedefUniversite,
+        String hedefBolum,
+        java.math.BigDecimal hedefPuan
 ) {}

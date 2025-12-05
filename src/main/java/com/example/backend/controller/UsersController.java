@@ -32,7 +32,8 @@ public class UsersController {
             roleToShow = u.getRole();
         }
         
-        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl(), u.getHedefSiralama());
+        return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl(), 
+                u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan());
     }
 
     @PutMapping("/me")
@@ -62,6 +63,21 @@ public class UsersController {
             user.setHedefSiralama(dto.getHedefSiralama());
         }
         
+        // Hedef üniversite güncellemesi
+        if (dto.getHedefUniversite() != null) {
+            user.setHedefUniversite(dto.getHedefUniversite());
+        }
+        
+        // Hedef bölüm güncellemesi
+        if (dto.getHedefBolum() != null) {
+            user.setHedefBolum(dto.getHedefBolum());
+        }
+        
+        // Hedef puan güncellemesi
+        if (dto.getHedefPuan() != null) {
+            user.setHedefPuan(dto.getHedefPuan());
+        }
+        
         AppUser savedUser = repo.save(user);
         
         // Rol bilgisi sadece ADMIN'lere gösterilir
@@ -78,7 +94,10 @@ public class UsersController {
             savedUser.getSoyad(), 
             roleToShow, 
             savedUser.getAvatarUrl(),
-            savedUser.getHedefSiralama()
+            savedUser.getHedefSiralama(),
+            savedUser.getHedefUniversite(),
+            savedUser.getHedefBolum(),
+            savedUser.getHedefPuan()
         );
         
         return ResponseEntity.ok(response);
@@ -88,7 +107,8 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<AuthUserDTO> all() {
         return repo.findAll().stream()
-                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), u.getHedefSiralama()))
+                .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
+                        u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan()))
                 .toList();
     }
 }

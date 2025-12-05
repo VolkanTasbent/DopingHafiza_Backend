@@ -32,6 +32,15 @@ public class AppUser {
     @Column(name = "hedef_siralama")
     private Integer hedefSiralama;
 
+    @Column(name = "hedef_universite", length = 255)
+    private String hedefUniversite;
+
+    @Column(name = "hedef_bolum", length = 255)
+    private String hedefBolum;
+
+    @Column(name = "hedef_puan")
+    private java.math.BigDecimal hedefPuan;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -54,4 +63,13 @@ public class AppUser {
 
     public Integer getHedefSiralama() { return hedefSiralama; }
     public void setHedefSiralama(Integer hedefSiralama) { this.hedefSiralama = hedefSiralama; }
+
+    public String getHedefUniversite() { return hedefUniversite; }
+    public void setHedefUniversite(String hedefUniversite) { this.hedefUniversite = hedefUniversite; }
+
+    public String getHedefBolum() { return hedefBolum; }
+    public void setHedefBolum(String hedefBolum) { this.hedefBolum = hedefBolum; }
+
+    public java.math.BigDecimal getHedefPuan() { return hedefPuan; }
+    public void setHedefPuan(java.math.BigDecimal hedefPuan) { this.hedefPuan = hedefPuan; }
 }

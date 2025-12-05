@@ -6,6 +6,9 @@ public class UpdateUserDTO {
     private String email;
     private String avatarUrl;
     private Integer hedefSiralama;
+    private String hedefUniversite;
+    private String hedefBolum;
+    private java.math.BigDecimal hedefPuan;
 
     // Getters ve Setters
     public String getAd() { return ad; }
@@ -22,6 +25,15 @@ public class UpdateUserDTO {
 
     public Integer getHedefSiralama() { return hedefSiralama; }
     public void setHedefSiralama(Integer hedefSiralama) { this.hedefSiralama = hedefSiralama; }
+
+    public String getHedefUniversite() { return hedefUniversite; }
+    public void setHedefUniversite(String hedefUniversite) { this.hedefUniversite = hedefUniversite; }
+
+    public String getHedefBolum() { return hedefBolum; }
+    public void setHedefBolum(String hedefBolum) { this.hedefBolum = hedefBolum; }
+
+    public java.math.BigDecimal getHedefPuan() { return hedefPuan; }
+    public void setHedefPuan(java.math.BigDecimal hedefPuan) { this.hedefPuan = hedefPuan; }
 }
 
 
