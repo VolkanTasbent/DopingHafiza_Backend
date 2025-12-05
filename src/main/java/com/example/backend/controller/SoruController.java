@@ -15,9 +15,11 @@ import com.example.backend.service.DenemeSinaviService;
 import com.example.backend.service.SoruService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -179,6 +181,23 @@ public class SoruController {
         boolean dogru = body.get("dogru") != null && Boolean.parseBoolean(Objects.toString(body.get("dogru")));
         Integer siralama = optionalInteger(body, "siralama");
         return service.addSecenek(soruId, metin, dogru, siralama);
+    }
+
+    /** CSV'den toplu soru yükleme (ADMIN) */
+    @PostMapping(value = "/import-csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Object> importCSV(@RequestPart("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Dosya boş");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("text/csv") && !contentType.equals("text/plain") 
+                && !file.getOriginalFilename().endsWith(".csv"))) {
+            throw new IllegalArgumentException("Sadece CSV dosyaları yüklenebilir");
+        }
+
+        return service.importFromCSV(file);
     }
 
     /** Soru güncelle (ADMIN) - Hem normal sorular hem de deneme sınavı soruları için */

@@ -7,3 +7,4 @@ UPDATE app_user SET hedef_siralama = 10000 WHERE hedef_siralama IS NULL;
 
 COMMENT ON COLUMN app_user.hedef_siralama IS 'Kullanıcının hedef sıralaması';
 
+

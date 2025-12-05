@@ -15,9 +15,15 @@ import com.example.backend.repository.SoruRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -287,6 +293,195 @@ public class SoruService {
             throw new IllegalArgumentException("Soru bulunamadı: " + id);
         }
         soruRepo.deleteById(id);
+    }
+
+    /** CSV'den toplu soru yükleme */
+    @Transactional
+    public Map<String, Object> importFromCSV(MultipartFile file) {
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+        int lineNumber = 0;
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            // Header'ı oku (ilk satırı atla)
+            String header = reader.readLine();
+            if (header == null) {
+                throw new IllegalArgumentException("CSV dosyası boş");
+            }
+            lineNumber++;
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lineNumber++;
+                if (line.trim().isEmpty()) continue;
+
+                try {
+                    // CSV parsing
+                    List<String> fields = parseCSVLine(line);
+
+                    if (fields.size() < 9) {
+                        errors.add("Satır " + lineNumber + ": Yetersiz alan sayısı (en az 9 alan gerekli)");
+                        continue;
+                    }
+
+                    String soruMetni = cleanField(fields.get(0));
+                    String sikA = cleanField(fields.get(1));
+                    String sikB = cleanField(fields.get(2));
+                    String sikC = cleanField(fields.get(3));
+                    String sikD = cleanField(fields.get(4));
+                    String sikE = fields.size() > 5 ? cleanField(fields.get(5)) : "";
+                    String dogruCevap = cleanField(fields.get(6));
+                    String zorlukStr = cleanField(fields.get(7));
+                    String konularStr = cleanField(fields.get(8));
+                    String dersAd = fields.size() > 9 ? cleanField(fields.get(9)) : "";
+                    String aciklama = fields.size() > 10 ? cleanField(fields.get(10)) : "";
+                    String imageUrl = fields.size() > 11 ? cleanField(fields.get(11)) : "";
+                    String cozumVideosuUrl = fields.size() > 12 ? cleanField(fields.get(12)) : "";
+
+                    if (soruMetni.isBlank()) {
+                        errors.add("Satır " + lineNumber + ": Soru metni boş");
+                        continue;
+                    }
+
+                    if (dersAd.isBlank()) {
+                        errors.add("Satır " + lineNumber + ": Ders adı boş");
+                        continue;
+                    }
+
+                    if (!dogruCevap.matches("^[ABCDEabcde]$")) {
+                        errors.add("Satır " + lineNumber + ": Geçersiz doğru cevap: " + dogruCevap);
+                        continue;
+                    }
+                    // Büyük harfe çevir
+                    dogruCevap = dogruCevap.toUpperCase();
+
+                    // Ders bul
+                    Ders ders = dersRepo.findAll().stream()
+                            .filter(d -> d.getAd().equalsIgnoreCase(dersAd.trim()))
+                            .findFirst()
+                            .orElse(null);
+                    if (ders == null) {
+                        errors.add("Satır " + lineNumber + ": Ders bulunamadı: " + dersAd);
+                        continue;
+                    }
+
+                    // Konuları bul
+                    List<Long> konuIds = new ArrayList<>();
+                    if (!konularStr.isBlank()) {
+                        String[] konuAdlari = konularStr.split(",");
+                        for (String konuAd : konuAdlari) {
+                            String trimmedKonuAd = konuAd.trim();
+                            if (!trimmedKonuAd.isEmpty()) {
+                                Konu konu = konuRepo.findByDersOrderByAdAsc(ders).stream()
+                                        .filter(k -> k.getAd().equalsIgnoreCase(trimmedKonuAd))
+                                        .findFirst()
+                                        .orElse(null);
+                                if (konu != null) {
+                                    konuIds.add(konu.getId());
+                                } else {
+                                    errors.add("Satır " + lineNumber + ": Konu bulunamadı: " + trimmedKonuAd + " (Ders: " + dersAd + ")");
+                                }
+                            }
+                        }
+                    }
+
+                    if (konuIds.isEmpty()) {
+                        errors.add("Satır " + lineNumber + ": En az bir konu gerekli");
+                        continue;
+                    }
+
+                    // Zorluk parse et
+                    Integer zorluk = null;
+                    if (!zorlukStr.isBlank()) {
+                        try {
+                            zorluk = Integer.parseInt(zorlukStr);
+                            if (zorluk < 1 || zorluk > 5) {
+                                zorluk = null;
+                            }
+                        } catch (NumberFormatException e) {
+                            // Zorluk yoksa null kalır
+                        }
+                    }
+
+                    // Soru oluştur
+                    SoruDTO soruDTO = addSoru(ders.getId(), konuIds, soruMetni, "coktan_secmeli", 
+                            zorluk, imageUrl.isEmpty() ? null : imageUrl, null, 
+                            aciklama.isEmpty() ? null : aciklama, 
+                            cozumVideosuUrl.isEmpty() ? null : cozumVideosuUrl);
+
+                    // Seçenekleri ekle
+                    int siralama = 1;
+                    if (!sikA.isBlank()) {
+                        addSecenek(soruDTO.id(), sikA, dogruCevap.equals("A"), siralama++);
+                    }
+                    if (!sikB.isBlank()) {
+                        addSecenek(soruDTO.id(), sikB, dogruCevap.equals("B"), siralama++);
+                    }
+                    if (!sikC.isBlank()) {
+                        addSecenek(soruDTO.id(), sikC, dogruCevap.equals("C"), siralama++);
+                    }
+                    if (!sikD.isBlank()) {
+                        addSecenek(soruDTO.id(), sikD, dogruCevap.equals("D"), siralama++);
+                    }
+                    if (!sikE.isBlank()) {
+                        addSecenek(soruDTO.id(), sikE, dogruCevap.equals("E"), siralama++);
+                    }
+
+                    successCount++;
+
+                } catch (Exception e) {
+                    errors.add("Satır " + lineNumber + ": " + e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("CSV okuma hatası: " + e.getMessage());
+        }
+
+        return Map.of(
+            "success", true,
+            "successCount", successCount,
+            "errorCount", errors.size(),
+            "errors", errors
+        );
+    }
+
+    /** CSV satırını parse et (basit implementasyon - tırnak desteği ile) */
+    private List<String> parseCSVLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    // Çift tırnak (escape)
+                    current.append('"');
+                    i++; // Bir sonraki karakteri atla
+                } else {
+                    // Tırnak aç/kapat
+                    inQuotes = !inQuotes;
+                }
+            } else if (c == ',' && !inQuotes) {
+                // Alan ayırıcı
+                fields.add(current.toString());
+                current = new StringBuilder();
+            } else {
+                current.append(c);
+            }
+        }
+        fields.add(current.toString()); // Son alan
+
+        return fields;
+    }
+
+    private String cleanField(String field) {
+        if (field == null) return "";
+        return field.trim();
     }
 
     // ---- Dönüşüm ----
