@@ -66,3 +66,4 @@ Script çalıştıktan sonra:
 - ✅ Backend'e yüklemeye hazır!
 
 
+

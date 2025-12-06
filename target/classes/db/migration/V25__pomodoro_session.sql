@@ -17,3 +17,4 @@ COMMENT ON TABLE pomodoro_session IS 'Pomodoro Timer oturum kayıtları';
 COMMENT ON COLUMN pomodoro_session.duration IS 'Pomodoro süresi (dakika cinsinden)';
 COMMENT ON COLUMN pomodoro_session.completed_at IS 'Pomodoro oturumunun tamamlandığı tarih/saat';
 
+

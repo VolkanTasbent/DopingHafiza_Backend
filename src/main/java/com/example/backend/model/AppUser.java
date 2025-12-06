@@ -41,6 +41,9 @@ public class AppUser {
     @Column(name = "hedef_puan")
     private java.math.BigDecimal hedefPuan;
 
+    @Column(name = "dark_mode")
+    private Boolean darkMode = false;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -72,4 +75,12 @@ public class AppUser {
 
     public java.math.BigDecimal getHedefPuan() { return hedefPuan; }
     public void setHedefPuan(java.math.BigDecimal hedefPuan) { this.hedefPuan = hedefPuan; }
+
+    public Boolean getDarkMode() {
+        return darkMode != null ? darkMode : false;
+    }
+
+    public void setDarkMode(Boolean darkMode) {
+        this.darkMode = darkMode;
+    }
 }

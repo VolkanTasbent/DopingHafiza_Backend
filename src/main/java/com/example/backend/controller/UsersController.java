@@ -33,7 +33,8 @@ public class UsersController {
         }
         
         return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl(), 
-                u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan());
+                u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(), 
+                u.getDarkMode() != null ? u.getDarkMode() : false);
     }
 
     @PutMapping("/me")
@@ -78,6 +79,11 @@ public class UsersController {
             user.setHedefPuan(dto.getHedefPuan());
         }
         
+        // Dark mode güncellemesi
+        if (dto.getDarkMode() != null) {
+            user.setDarkMode(dto.getDarkMode());
+        }
+        
         AppUser savedUser = repo.save(user);
         
         // Rol bilgisi sadece ADMIN'lere gösterilir
@@ -97,7 +103,8 @@ public class UsersController {
             savedUser.getHedefSiralama(),
             savedUser.getHedefUniversite(),
             savedUser.getHedefBolum(),
-            savedUser.getHedefPuan()
+            savedUser.getHedefPuan(),
+            savedUser.getDarkMode() != null ? savedUser.getDarkMode() : false
         );
         
         return ResponseEntity.ok(response);
@@ -108,7 +115,8 @@ public class UsersController {
     public List<AuthUserDTO> all() {
         return repo.findAll().stream()
                 .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
-                        u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan()))
+                        u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(),
+                        u.getDarkMode() != null ? u.getDarkMode() : false))
                 .toList();
     }
 }

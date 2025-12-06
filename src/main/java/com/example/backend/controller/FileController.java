@@ -192,7 +192,8 @@ public class FileController {
             user.getHedefSiralama(),
             user.getHedefUniversite(),
             user.getHedefBolum(),
-            user.getHedefPuan()
+            user.getHedefPuan(),
+            user.getDarkMode() != null ? user.getDarkMode() : false
         );
     }
 

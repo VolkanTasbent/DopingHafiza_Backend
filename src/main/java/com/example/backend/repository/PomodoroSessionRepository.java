@@ -12,3 +12,4 @@ public interface PomodoroSessionRepository extends JpaRepository<PomodoroSession
     List<PomodoroSession> findByUserIdAndCompletedAtAfter(Long userId, Instant after);
 }
 
+

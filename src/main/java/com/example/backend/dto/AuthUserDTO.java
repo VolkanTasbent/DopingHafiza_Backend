@@ -10,5 +10,6 @@ public record AuthUserDTO(
     Integer hedefSiralama,
     String hedefUniversite,
     String hedefBolum,
-    java.math.BigDecimal hedefPuan
+    java.math.BigDecimal hedefPuan,
+    Boolean darkMode
 ) {}

@@ -208,3 +208,4 @@ Script çalışmıyorsa:
 4. Hata mesajını okuyun ve düzeltin
 
 
+

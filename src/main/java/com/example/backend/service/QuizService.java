@@ -25,6 +25,7 @@ public class QuizService {
     private final DenemeSinaviRepository denemeRepo;
     private final DenemeSinaviSoruRepository denemeSoruRepo;
     private final DenemeSinaviCevapRepository denemeCevapRepo;
+    private final com.example.backend.repository.UserActivityRepository userActivityRepo;
 
     public QuizService(
             DersRepository dersRepo,
@@ -34,7 +35,8 @@ public class QuizService {
             CevapRepository cevapRepo,
             DenemeSinaviRepository denemeRepo,
             DenemeSinaviSoruRepository denemeSoruRepo,
-            DenemeSinaviCevapRepository denemeCevapRepo
+            DenemeSinaviCevapRepository denemeCevapRepo,
+            com.example.backend.repository.UserActivityRepository userActivityRepo
     ) {
         this.dersRepo = dersRepo;
         this.soruRepo = soruRepo;
@@ -44,6 +46,7 @@ public class QuizService {
         this.denemeRepo = denemeRepo;
         this.denemeSoruRepo = denemeSoruRepo;
         this.denemeCevapRepo = denemeCevapRepo;
+        this.userActivityRepo = userActivityRepo;
     }
 
     /** ✅ Quiz sonuçlarını kaydeder */
@@ -116,6 +119,67 @@ public class QuizService {
         oturumRepo.save(oturum);
 
         System.out.println("✅ Oturum " + oturum.getId() + " kaydedildi. Doğru=" + correct + " | Yanlış=" + wrong + " | Boş=" + empty + " | Net=" + String.format("%.2f", net));
+
+        // Aktivite kaydet
+        if (user != null && total > 0) {
+            try {
+                // İlk sorudan ders ve konu bilgilerini al
+                Soru ilkSoru = null;
+                Ders ders = null;
+                Konu konu = null;
+                
+                if (req.items() != null && !req.items().isEmpty()) {
+                    ilkSoru = soruRepo.findById(req.items().get(0).soruId()).orElse(null);
+                    if (ilkSoru != null) {
+                        ders = ilkSoru.getDers();
+                        // İlk konuyu al (eğer varsa)
+                        if (!ilkSoru.getKonular().isEmpty()) {
+                            konu = ilkSoru.getKonular().iterator().next();
+                        }
+                    }
+                }
+
+                com.example.backend.model.UserActivity activity = new com.example.backend.model.UserActivity();
+                activity.setUserId(user.getId());
+                activity.setActivityType("soru_cozme");
+                
+                // Başlık oluştur
+                String title = "Soru Çözme";
+                if (ders != null && ders.getAd() != null) {
+                    title = ders.getAd();
+                    if (konu != null && konu.getAd() != null) {
+                        title += " > " + konu.getAd();
+                    }
+                }
+                activity.setActivityTitle(title);
+                
+                // Alt başlık: Konu detayı veya genel bilgi
+                String subtitle = total + " soru çözüldü";
+                if (konu != null && konu.getAd() != null) {
+                    subtitle = konu.getAd();
+                }
+                activity.setActivitySubtitle(subtitle);
+                
+                activity.setActivityIcon("abc");
+                activity.setDersId(ders != null ? ders.getId() : null);
+                activity.setKonuId(konu != null ? konu.getId() : null);
+                activity.setRaporId(oturum.getId());
+                
+                // Metadata
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("soruSayisi", total);
+                metadata.put("dogru", correct);
+                metadata.put("yanlis", wrong);
+                metadata.put("net", net);
+                activity.setMetadata(metadata);
+                
+                userActivityRepo.save(activity);
+                System.out.println("✅ Aktivite kaydedildi: " + title);
+            } catch (Exception e) {
+                System.err.println("⚠️ Aktivite kaydedilirken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
 
         return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
@@ -424,6 +488,34 @@ public class QuizService {
         oturum.setEmpty(empty);
         oturum.setScore((int) Math.round(net));
         oturumRepo.save(oturum);
+
+        // Aktivite kaydet
+        if (user != null && total > 0) {
+            try {
+                com.example.backend.model.UserActivity activity = new com.example.backend.model.UserActivity();
+                activity.setUserId(user.getId());
+                activity.setActivityType("soru_cozme");
+                activity.setActivityTitle(deneme.getAd() != null ? deneme.getAd() : "Deneme Sınavı");
+                activity.setActivitySubtitle(deneme.getTip() != null ? deneme.getTip() + " - " + total + " soru" : total + " soru çözüldü");
+                activity.setActivityIcon("abc");
+                activity.setRaporId(oturum.getId());
+                
+                // Metadata
+                Map<String, Object> metadata = new HashMap<>();
+                metadata.put("soruSayisi", total);
+                metadata.put("dogru", correct);
+                metadata.put("yanlis", wrong);
+                metadata.put("net", net);
+                metadata.put("denemeSinaviId", deneme.getId());
+                activity.setMetadata(metadata);
+                
+                userActivityRepo.save(activity);
+                System.out.println("✅ Deneme sınavı aktivitesi kaydedildi: " + deneme.getAd());
+            } catch (Exception e) {
+                System.err.println("⚠️ Deneme sınavı aktivitesi kaydedilirken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
 
         return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }

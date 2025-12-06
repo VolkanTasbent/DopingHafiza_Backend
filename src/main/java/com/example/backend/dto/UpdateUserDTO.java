@@ -9,6 +9,7 @@ public class UpdateUserDTO {
     private String hedefUniversite;
     private String hedefBolum;
     private java.math.BigDecimal hedefPuan;
+    private Boolean darkMode;
 
     // Getters ve Setters
     public String getAd() { return ad; }
@@ -34,6 +35,9 @@ public class UpdateUserDTO {
 
     public java.math.BigDecimal getHedefPuan() { return hedefPuan; }
     public void setHedefPuan(java.math.BigDecimal hedefPuan) { this.hedefPuan = hedefPuan; }
+
+    public Boolean getDarkMode() { return darkMode; }
+    public void setDarkMode(Boolean darkMode) { this.darkMode = darkMode; }
 }
 
 

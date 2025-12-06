@@ -56,6 +56,8 @@ public class SecurityConfig {
 
                         // Kullanıcı uçları
                         .requestMatchers(GET, "/api/users/me").authenticated()
+                        .requestMatchers(GET, "/api/activities/**").authenticated() // Son aktiviteler
+                        .requestMatchers(POST, "/api/activities/**").authenticated() // Aktivite kaydet
                         .requestMatchers(POST, "/api/quiz/**").authenticated() // Quiz submit
                         .requestMatchers(POST, "/api/cevap/**").authenticated() // Cevap submit (deneme sınavı)
                         // Deneme sınavı submit endpoint'leri (frontend) - pattern'leri düzeltildi

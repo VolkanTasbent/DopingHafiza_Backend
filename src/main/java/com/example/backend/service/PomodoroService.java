@@ -5,21 +5,27 @@ import com.example.backend.dto.PomodoroSessionRequest;
 import com.example.backend.dto.PomodoroSessionResponse;
 import com.example.backend.dto.PomodoroStatsResponse;
 import com.example.backend.model.PomodoroSession;
+import com.example.backend.model.UserActivity;
 import com.example.backend.repository.PomodoroSessionRepository;
+import com.example.backend.repository.UserActivityRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PomodoroService {
     private final PomodoroSessionRepository repository;
+    private final UserActivityRepository userActivityRepository;
 
-    public PomodoroService(PomodoroSessionRepository repository) {
+    public PomodoroService(PomodoroSessionRepository repository, UserActivityRepository userActivityRepository) {
         this.repository = repository;
+        this.userActivityRepository = userActivityRepository;
     }
 
     @Transactional
@@ -38,6 +44,27 @@ public class PomodoroService {
         session.setCreatedAt(Instant.now());
         
         PomodoroSession saved = repository.save(session);
+        
+        // Aktivite kaydet
+        try {
+            UserActivity activity = new UserActivity();
+            activity.setUserId(userId);
+            activity.setActivityType("pomodoro");
+            activity.setActivityTitle("Pomodoro Çalışması");
+            activity.setActivitySubtitle(request.getDuration() + " dakika çalışma");
+            activity.setActivityIcon("grid");
+            
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("duration", request.getDuration());
+            activity.setMetadata(metadata);
+            
+            userActivityRepository.save(activity);
+            System.out.println("✅ Pomodoro aktivitesi kaydedildi: " + request.getDuration() + " dakika");
+        } catch (Exception e) {
+            System.err.println("⚠️ Pomodoro aktivitesi kaydedilirken hata: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         return PomodoroSessionResponse.from(saved);
     }
 
@@ -94,4 +121,5 @@ public class PomodoroService {
         return stats;
     }
 }
+
 
