@@ -1,3 +1,4 @@
+com/example/backend/dto/VideoNotesResponse.class
 com/example/backend/controller/AuthController.class
 com/example/backend/security/JwtAuthFilter.class
 com/example/backend/dto/DenemeSinaviSoruDTOForQuiz.class
@@ -10,6 +11,7 @@ com/example/backend/controller/KonuController.class
 com/example/backend/dto/LoginResponse.class
 com/example/backend/service/SoruService.class
 com/example/backend/controller/QuizController.class
+com/example/backend/dto/UpdateVideoNoteRequest.class
 com/example/backend/dto/QuizSubmitItemDTO.class
 com/example/backend/controller/HealthController.class
 com/example/backend/model/Konu.class
@@ -21,6 +23,7 @@ com/example/backend/dto/CreateDenemeSinaviRequest.class
 com/example/backend/model/DenemeSinaviCevap.class
 com/example/backend/model/DenemeSinavi.class
 com/example/backend/dto/DenemeSinaviSoruDTO.class
+com/example/backend/controller/VideoNoteController.class
 com/example/backend/repository/QuizOturumuRepository.class
 com/example/backend/model/Ders.class
 com/example/backend/model/CozumKaydi.class
@@ -34,6 +37,7 @@ com/example/backend/repository/SoruRepository.class
 com/example/backend/repository/SecenekRepository.class
 com/example/backend/controller/UsersController.class
 com/example/backend/dto/UpdateSecenekRequest.class
+com/example/backend/repository/VideoNoteRepository.class
 com/example/backend/service/FileStorageService.class
 com/example/backend/controller/CozumController.class
 com/example/backend/dto/OturumDetayDTO.class
@@ -65,6 +69,7 @@ com/example/backend/dto/UpdateDenemeSinaviSoruRequest.class
 com/example/backend/dto/DenemeSinaviSubmitRequest.class
 com/example/backend/controller/AdminController.class
 com/example/backend/dto/CreateDenemeSinaviRequestFrontend.class
+com/example/backend/model/VideoNote.class
 com/example/backend/dto/DenemeSinaviSubmitItemDTO.class
 com/example/backend/service/DenemeSinaviService.class
 com/example/backend/repository/CevapRepository.class
@@ -75,6 +80,8 @@ com/example/backend/dto/RaporOzetDTO.class
 com/example/backend/model/Secenek.class
 com/example/backend/dto/RegisterRequest.class
 com/example/backend/repository/AppUserRepository.class
+com/example/backend/dto/VideoNoteResponse.class
 com/example/backend/controller/RaporController.class
 com/example/backend/controller/CevapController.class
+com/example/backend/dto/CreateVideoNoteRequest.class
 com/example/backend/repository/DenemeSinaviCevapRepository.class
