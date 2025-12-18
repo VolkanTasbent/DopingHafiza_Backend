@@ -18,3 +18,9 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     List<UserActivity> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
 }
 
+
+
+
+
+
+

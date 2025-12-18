@@ -18,3 +18,9 @@ COMMENT ON COLUMN pomodoro_session.duration IS 'Pomodoro süresi (dakika cinsind
 COMMENT ON COLUMN pomodoro_session.completed_at IS 'Pomodoro oturumunun tamamlandığı tarih/saat';
 
 
+
+
+
+
+
+

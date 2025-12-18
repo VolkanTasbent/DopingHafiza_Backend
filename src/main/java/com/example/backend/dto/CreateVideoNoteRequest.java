@@ -8,6 +8,8 @@ public class CreateVideoNoteRequest {
     @NotNull(message = "Konu ID is required")
     private Long konuId;
 
+    private String videoId; // Opsiyonel: Video ID (konuId_videoIndex formatında)
+
     @NotBlank(message = "Video URL is required")
     private String videoUrl;
 
@@ -25,6 +27,14 @@ public class CreateVideoNoteRequest {
 
     public void setKonuId(Long konuId) {
         this.konuId = konuId;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public void setVideoId(String videoId) {
+        this.videoId = videoId;
     }
 
     public String getVideoUrl() {
@@ -51,4 +61,9 @@ public class CreateVideoNoteRequest {
         this.timestampSeconds = timestampSeconds;
     }
 }
+
+
+
+
+
 

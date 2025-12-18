@@ -143,7 +143,8 @@ public class DenemeSinaviService {
             for (String konuAdi : konuAdlari) {
                 String trimmed = konuAdi.trim();
                 if (!trimmed.isEmpty()) {
-                    konular.add(new com.example.backend.dto.KonuDTO(null, trimmed, "", "", ""));
+                    // KonuDTO: id, ad, dokumanUrl, dokumanAdi, konuAnlatimVideosuUrl, aciklama, dersId, videolar
+                    konular.add(new com.example.backend.dto.KonuDTO(null, trimmed, "", "", "", null, null, java.util.Collections.emptyList()));
                 }
             }
         }

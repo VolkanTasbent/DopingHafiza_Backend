@@ -122,7 +122,7 @@ public class SoruController {
                 String trimmed = konuAdi.trim();
                 if (!trimmed.isEmpty()) {
                     // Konu ID'si yok, sadece ad ile oluşturuyoruz
-                    konular.add(new KonuDTO(null, trimmed, "", "", ""));
+                    konular.add(new KonuDTO(null, trimmed, "", "", "", null, null, java.util.Collections.emptyList()));
                 }
             }
         }

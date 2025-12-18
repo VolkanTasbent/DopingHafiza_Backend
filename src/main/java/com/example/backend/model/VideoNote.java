@@ -16,6 +16,9 @@ public class VideoNote {
     @Column(name = "konu_id", nullable = false)
     private Long konuId;
 
+    @Column(name = "video_id", length = 255)
+    private String videoId;
+
     @Column(name = "video_url", nullable = false, columnDefinition = "TEXT")
     private String videoUrl;
 
@@ -71,6 +74,14 @@ public class VideoNote {
         this.konuId = konuId;
     }
 
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public void setVideoId(String videoId) {
+        this.videoId = videoId;
+    }
+
     public String getVideoUrl() {
         return videoUrl;
     }
@@ -111,4 +122,9 @@ public class VideoNote {
         this.updatedAt = updatedAt;
     }
 }
+
+
+
+
+
 

@@ -67,3 +67,9 @@ Script çalıştıktan sonra:
 
 
 
+
+
+
+
+
+

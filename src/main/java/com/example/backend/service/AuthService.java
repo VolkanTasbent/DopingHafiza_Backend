@@ -20,7 +20,7 @@ public class AuthService {
         this.repo = repo; this.encoder = encoder; this.authManager = authManager; this.jwt = jwt;
     }
 
-    public AuthUserDTO register(RegisterRequest r) {
+    public AuthUserDTO register(    RegisterRequest r) {
         if (repo.existsByEmail(r.email())) {
             throw new IllegalArgumentException("Email zaten kayıtlı");
         }

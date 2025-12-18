@@ -34,30 +34,77 @@ public class VideoNoteController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<VideoNoteResponse> createVideoNote(
+    public ResponseEntity<?> createVideoNote(
             @Valid @RequestBody CreateVideoNoteRequest request,
             Authentication authentication
     ) {
-        String email = authentication.getName();
-        AppUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        try {
+            String email = authentication.getName();
+            AppUser user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        VideoNote note = new VideoNote();
-        note.setUserId(user.getId());
-        note.setKonuId(request.getKonuId());
-        note.setVideoUrl(request.getVideoUrl());
-        note.setNoteText(request.getNoteText());
-        note.setTimestampSeconds(request.getTimestampSeconds());
+            System.out.println("📥 Video note ekleme isteği:");
+            System.out.println("  - Konu ID: " + request.getKonuId());
+            System.out.println("  - Video ID: " + request.getVideoId());
+            System.out.println("  - Video URL: " + request.getVideoUrl());
+            System.out.println("  - Note Text: " + (request.getNoteText() != null ? request.getNoteText().substring(0, Math.min(50, request.getNoteText().length())) + "..." : "null"));
+            System.out.println("  - Timestamp: " + request.getTimestampSeconds());
+            System.out.println("  - User ID: " + user.getId());
 
-        VideoNote saved = videoNoteRepository.save(note);
+            VideoNote note = new VideoNote();
+            note.setUserId(user.getId());
+            note.setKonuId(request.getKonuId());
+            
+            // videoId varsa ve videoUrl'den farklıysa kaydet
+            // Aksi halde null bırak (geriye dönük uyumluluk için videoUrl kullanılacak)
+            if (request.getVideoId() != null && !request.getVideoId().trim().isEmpty() 
+                && !request.getVideoId().equals(request.getVideoUrl())) {
+                note.setVideoId(request.getVideoId().trim());
+                System.out.println("  - Video ID kaydediliyor: " + request.getVideoId());
+            } else {
+                note.setVideoId(null);
+                System.out.println("  - Video ID kaydedilmiyor (videoUrl kullanılacak)");
+            }
+            
+            note.setVideoUrl(request.getVideoUrl());
+            note.setNoteText(request.getNoteText());
+            note.setTimestampSeconds(request.getTimestampSeconds());
 
-        return ResponseEntity.ok(VideoNoteResponse.from(saved));
+            VideoNote saved = videoNoteRepository.save(note);
+            
+            System.out.println("✅ Video note başarıyla kaydedildi:");
+            System.out.println("  - Note ID: " + saved.getId());
+            System.out.println("  - User ID: " + saved.getUserId());
+            System.out.println("  - Konu ID: " + saved.getKonuId());
+            System.out.println("  - Video ID: " + saved.getVideoId());
+            System.out.println("  - Video URL: " + saved.getVideoUrl());
+            System.out.println("  - Timestamp: " + saved.getTimestampSeconds());
+            
+            // Veritabanından tekrar okuyarak doğrula
+            VideoNote verify = videoNoteRepository.findById(saved.getId()).orElse(null);
+            if (verify != null) {
+                System.out.println("✅ Veritabanı doğrulaması başarılı - Note ID: " + verify.getId() + ", User ID: " + verify.getUserId());
+            } else {
+                System.err.println("❌ UYARI: Not kaydedildi ama veritabanından okunamadı!");
+            }
+
+            return ResponseEntity.ok(VideoNoteResponse.from(saved));
+        } catch (Exception e) {
+            System.err.println("❌ Video note ekleme hatası: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", "Video note eklenemedi: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<VideoNotesResponse> getVideoNotes(
             @RequestParam(required = false) Long konuId,
+            @RequestParam(required = false) String videoId, // YENİ: videoId parametresi
             @RequestParam(required = false) String videoUrl,
             Authentication authentication
     ) {
@@ -65,13 +112,107 @@ public class VideoNoteController {
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        System.out.println("📥 Video note listeleme isteği:");
+        System.out.println("  - Konu ID: " + konuId);
+        System.out.println("  - Video ID: " + videoId + " (null? " + (videoId == null) + ", empty? " + (videoId != null && videoId.trim().isEmpty()) + ")");
+        System.out.println("  - Video URL: " + videoUrl + " (null? " + (videoUrl == null) + ", empty? " + (videoUrl != null && videoUrl.trim().isEmpty()) + ")");
+        System.out.println("  - Video ID == Video URL? " + (videoId != null && videoUrl != null && videoId.equals(videoUrl)));
+        System.out.println("  - User ID: " + user.getId());
+
         List<VideoNote> notes;
+        
         if (konuId != null) {
-            notes = videoNoteRepository.findByUserIdAndKonuIdOrderByTimestampSecondsAsc(user.getId(), konuId);
-        } else if (videoUrl != null) {
-            notes = videoNoteRepository.findByUserIdAndVideoUrlOrderByTimestampSecondsAsc(user.getId(), videoUrl);
-        } else {
+            // videoId varsa ve videoUrl'den farklıysa, önce videoId ile ara
+            if (videoId != null && !videoId.trim().isEmpty() 
+                && (videoUrl == null || !videoId.equals(videoUrl))) {
+                System.out.println("🔍 Filtreleme: konuId + videoId (videoId != videoUrl)");
+                notes = videoNoteRepository.findByKonuIdAndVideoIdAndUserIdOrderByTimestampSecondsAsc(
+                    konuId, videoId.trim(), user.getId()
+                );
+                System.out.println("🔍 VideoId ile bulunan not sayısı: " + notes.size());
+                
+                // Eğer videoId ile bulunamadıysa, videoUrl ile de dene
+                // (eski notlar videoId olmadan kaydedilmiş olabilir)
+                if (notes.isEmpty() && videoUrl != null && !videoUrl.trim().isEmpty()) {
+                    System.out.println("🔍 VideoId ile bulunamadı, videoUrl ile deneniyor...");
+                    List<VideoNote> urlNotes = videoNoteRepository.findByKonuIdAndVideoUrlAndUserIdOrderByTimestampSecondsAsc(
+                        konuId, videoUrl.trim(), user.getId()
+                    );
+                    // videoId null olan veya eşleşen kayıtları ekle
+                    notes = urlNotes.stream()
+                        .filter(n -> n.getVideoId() == null || n.getVideoId().equals(videoId.trim()))
+                        .collect(Collectors.toList());
+                    System.out.println("🔍 VideoUrl ile bulunan not sayısı: " + notes.size());
+                }
+            }
+            // videoId yoksa veya videoUrl ile aynıysa, videoUrl ile ara
+            else if (videoUrl != null && !videoUrl.trim().isEmpty()) {
+                System.out.println("🔍 Filtreleme: konuId + videoUrl (videoId yok veya videoUrl ile aynı)");
+                notes = videoNoteRepository.findByKonuIdAndVideoUrlAndUserIdOrderByTimestampSecondsAsc(
+                    konuId, videoUrl.trim(), user.getId()
+                );
+                System.out.println("🔍 VideoUrl ile bulunan not sayısı: " + notes.size());
+            }
+            // Sadece konuId varsa, konuId'ye göre filtrele (tüm videolar)
+            else {
+                System.out.println("🔍 Filtreleme: sadece konuId (tüm videolar)");
+                notes = videoNoteRepository.findByUserIdAndKonuIdOrderByTimestampSecondsAsc(user.getId(), konuId);
+                System.out.println("🔍 KonuId ile bulunan not sayısı: " + notes.size());
+            }
+        }
+        // Sadece videoUrl varsa (konuId yok), videoUrl'e göre filtrele
+        else if (videoUrl != null && !videoUrl.trim().isEmpty()) {
+            System.out.println("🔍 Filtreleme: sadece videoUrl");
+            notes = videoNoteRepository.findByUserIdAndVideoUrlOrderByTimestampSecondsAsc(user.getId(), videoUrl.trim());
+            System.out.println("🔍 VideoUrl ile bulunan not sayısı: " + notes.size());
+        }
+        // Hiçbiri yoksa, tüm notları getir
+        else {
+            System.out.println("🔍 Filtreleme: tüm notlar");
             notes = videoNoteRepository.findByUserIdOrderByTimestampSecondsAsc(user.getId());
+            System.out.println("🔍 Tüm notlar: " + notes.size());
+        }
+
+        System.out.println("📊 Bulunan not sayısı: " + notes.size());
+        
+        // Bulunan notların detaylarını logla
+        if (notes.isEmpty()) {
+            System.out.println("⚠️ UYARI: Hiç not bulunamadı!");
+        } else {
+            for (VideoNote note : notes) {
+                System.out.println("  ✅ Note ID: " + note.getId() + 
+                    ", User ID: " + note.getUserId() + 
+                    ", Konu ID: " + note.getKonuId() + 
+                    ", Video ID: " + (note.getVideoId() != null ? note.getVideoId() : "NULL") +
+                    ", Video URL: " + (note.getVideoUrl() != null ? note.getVideoUrl().substring(0, Math.min(50, note.getVideoUrl().length())) : "NULL"));
+            }
+        }
+        
+        // Tüm notları kontrol et (debug için)
+        List<VideoNote> allUserNotes = videoNoteRepository.findByUserId(user.getId());
+        System.out.println("📊 Kullanıcının toplam not sayısı: " + allUserNotes.size());
+        if (allUserNotes.isEmpty()) {
+            System.out.println("⚠️ UYARI: Kullanıcının hiç notu yok!");
+        } else {
+            System.out.println("📋 Tüm notlar (filtreleme olmadan):");
+            for (VideoNote note : allUserNotes) {
+                boolean matches = false;
+                if (konuId != null && note.getKonuId().equals(konuId)) {
+                    if (videoId != null && !videoId.trim().isEmpty() && !videoId.equals(videoUrl)) {
+                        matches = videoId.trim().equals(note.getVideoId());
+                    } else if (videoUrl != null && !videoUrl.trim().isEmpty()) {
+                        matches = videoUrl.trim().equals(note.getVideoUrl());
+                    } else {
+                        matches = true; // Sadece konuId eşleşiyor
+                    }
+                }
+                System.out.println("  " + (matches ? "✅" : "❌") + 
+                    " Note ID: " + note.getId() + 
+                    ", Konu ID: " + note.getKonuId() + 
+                    ", Video ID: " + (note.getVideoId() != null ? note.getVideoId() : "NULL") + 
+                    ", Video URL: " + (note.getVideoUrl() != null ? note.getVideoUrl().substring(0, Math.min(50, note.getVideoUrl().length())) : "NULL") +
+                    ", Timestamp: " + note.getTimestampSeconds());
+            }
         }
 
         List<VideoNoteResponse> noteResponses = notes.stream()
@@ -137,5 +278,39 @@ public class VideoNoteController {
         response.put("message", "Video note deleted successfully");
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Debug endpoint: Kullanıcının tüm notlarını getir (videoId'ye bakmadan)
+     */
+    @GetMapping("/debug/all")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getAllVideoNotesDebug(Authentication authentication) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<VideoNote> allNotes = videoNoteRepository.findByUserId(user.getId());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("userId", user.getId());
+        response.put("totalNotes", allNotes.size());
+        response.put("notes", allNotes.stream()
+                .map(n -> Map.of(
+                    "id", n.getId(),
+                    "konuId", n.getKonuId(),
+                    "videoId", n.getVideoId() != null ? n.getVideoId() : "null",
+                    "videoUrl", n.getVideoUrl() != null ? n.getVideoUrl().substring(0, Math.min(50, n.getVideoUrl().length())) : "null",
+                    "timestamp", n.getTimestampSeconds(),
+                    "noteText", n.getNoteText() != null ? n.getNoteText().substring(0, Math.min(30, n.getNoteText().length())) : "null"
+                ))
+                .collect(Collectors.toList()));
+        
+        return ResponseEntity.ok(response);
+    }
 }
+
+
+
+
+
 

@@ -26,6 +26,7 @@ public class QuizService {
     private final DenemeSinaviSoruRepository denemeSoruRepo;
     private final DenemeSinaviCevapRepository denemeCevapRepo;
     private final com.example.backend.repository.UserActivityRepository userActivityRepo;
+    private final ScoreCalculationService scoreCalculationService;
 
     public QuizService(
             DersRepository dersRepo,
@@ -36,7 +37,8 @@ public class QuizService {
             DenemeSinaviRepository denemeRepo,
             DenemeSinaviSoruRepository denemeSoruRepo,
             DenemeSinaviCevapRepository denemeCevapRepo,
-            com.example.backend.repository.UserActivityRepository userActivityRepo
+            com.example.backend.repository.UserActivityRepository userActivityRepo,
+            ScoreCalculationService scoreCalculationService
     ) {
         this.dersRepo = dersRepo;
         this.soruRepo = soruRepo;
@@ -47,6 +49,7 @@ public class QuizService {
         this.denemeSoruRepo = denemeSoruRepo;
         this.denemeCevapRepo = denemeCevapRepo;
         this.userActivityRepo = userActivityRepo;
+        this.scoreCalculationService = scoreCalculationService;
     }
 
     /** ✅ Quiz sonuçlarını kaydeder */
@@ -181,16 +184,38 @@ public class QuizService {
             }
         }
 
+        // Puanı güncelle (kullanıcı varsa)
+        if (user != null) {
+            try {
+                scoreCalculationService.calculateAndUpdateScore(user);
+                System.out.println("✅ Kullanıcı puanı güncellendi: " + user.getId());
+            } catch (Exception e) {
+                System.err.println("⚠️ Puan güncellenirken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
         return new SubmitResponseDTO(oturum.getId(), correct, wrong, empty, total, net);
     }
 
     /** ✅ Kullanıcının rapor özetlerini listeler */
     @Transactional(readOnly = true)
     public List<RaporOzetDTO> listOzetForUser(AppUser user, Integer limit) {
-        var page = oturumRepo.findByUser(
-                user,
-                org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
-        );
+        // Admin kontrolü: Admin ise tüm raporları getir, normal kullanıcı ise sadece kendi raporlarını
+        org.springframework.data.domain.Page<QuizOturumu> page;
+        if (user.getRole() != null && user.getRole().equals("ADMIN")) {
+            // Admin: Tüm raporları getir
+            page = oturumRepo.findAll(
+                    org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
+            );
+        } else {
+            // Normal kullanıcı: Sadece kendi raporlarını getir
+            page = oturumRepo.findByUser(
+                    user,
+                    org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
+            );
+        }
+        
         return page.getContent().stream()
                 .map(o -> {
                     // Net hesapla: Doğru - (Yanlış / 4)
@@ -213,7 +238,9 @@ public class QuizService {
     /** ✅ Rapor detaylarını getirir (LazyInitialization fix + DTO dönüşümü) - DERS BİLGİSİ EKLENDİ */
     @Transactional(readOnly = true)
     public RaporDetayDTO detayForUser(AppUser user, Long oturumId, boolean isAdmin) {
-        QuizOturumu o = isAdmin
+        // Admin kontrolü: Admin ise tüm raporları görebilir, normal kullanıcı ise sadece kendi raporlarını
+        boolean isUserAdmin = user.getRole() != null && user.getRole().equals("ADMIN");
+        QuizOturumu o = (isAdmin || isUserAdmin)
                 ? oturumRepo.findById(oturumId)
                 .orElseThrow(() -> new IllegalArgumentException("Oturum yok: " + oturumId))
                 : oturumRepo.findByIdAndUser(oturumId, user)
@@ -342,7 +369,8 @@ public class QuizService {
             for (String konuAdi : konuAdlari) {
                 String trimmed = konuAdi.trim();
                 if (!trimmed.isEmpty()) {
-                    konular.add(new KonuDTO(null, trimmed, "", "", ""));
+                    // KonuDTO: id, ad, dokumanUrl, dokumanAdi, konuAnlatimVideosuUrl, aciklama, dersId, videolar
+                    konular.add(new KonuDTO(null, trimmed, "", "", "", null, null, java.util.Collections.emptyList()));
                 }
             }
         }
@@ -385,7 +413,10 @@ public class QuizService {
                         k.getAd() != null ? k.getAd() : "",
                         k.getDokumanUrl() != null ? k.getDokumanUrl() : "",
                         k.getDokumanAdi() != null ? k.getDokumanAdi() : "",
-                        k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : ""))
+                        k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : "",
+                        k.getAciklama() != null ? k.getAciklama() : null,
+                        k.getDers() != null ? k.getDers().getId() : null,
+                        java.util.Collections.emptyList())) // Videolar lazy load edilmediği için boş liste
                 .toList();
 
         var secenekler = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
@@ -513,6 +544,17 @@ public class QuizService {
                 System.out.println("✅ Deneme sınavı aktivitesi kaydedildi: " + deneme.getAd());
             } catch (Exception e) {
                 System.err.println("⚠️ Deneme sınavı aktivitesi kaydedilirken hata: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        // Puanı güncelle (kullanıcı varsa)
+        if (user != null) {
+            try {
+                scoreCalculationService.calculateAndUpdateScore(user);
+                System.out.println("✅ Kullanıcı puanı güncellendi: " + user.getId());
+            } catch (Exception e) {
+                System.err.println("⚠️ Puan güncellenirken hata: " + e.getMessage());
                 e.printStackTrace();
             }
         }

@@ -7,3 +7,9 @@ CREATE INDEX IF NOT EXISTS idx_user_dark_mode ON app_user(dark_mode);
 
 COMMENT ON COLUMN app_user.dark_mode IS 'Kullanıcının dark mode tercihi';
 
+
+
+
+
+
+

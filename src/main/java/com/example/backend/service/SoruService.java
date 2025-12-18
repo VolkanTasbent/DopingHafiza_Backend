@@ -492,7 +492,10 @@ public class SoruService {
                     k.getAd() != null ? k.getAd() : "", 
                     k.getDokumanUrl() != null ? k.getDokumanUrl() : "", 
                     k.getDokumanAdi() != null ? k.getDokumanAdi() : "", 
-                    k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : ""))
+                    k.getKonuAnlatimVideosuUrl() != null ? k.getKonuAnlatimVideosuUrl() : "",
+                    k.getAciklama() != null ? k.getAciklama() : null,
+                    k.getDers() != null ? k.getDers().getId() : null,
+                    java.util.Collections.emptyList())) // Videolar lazy load edilmediği için boş liste
                 .toList();
 
         var opts = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()

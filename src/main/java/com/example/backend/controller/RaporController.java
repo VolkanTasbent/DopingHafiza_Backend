@@ -1,5 +1,7 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.DailyStudyTime;
+import com.example.backend.dto.DailyStudyTimesResponse;
 import com.example.backend.dto.GrafikRaporDTO;
 import com.example.backend.dto.RaporDetayDTO;
 import com.example.backend.dto.RaporDetayItemDTO;
@@ -7,10 +9,15 @@ import com.example.backend.dto.RaporOzetDTO;
 import com.example.backend.model.AppUser;
 import com.example.backend.repository.AppUserRepository;
 import com.example.backend.service.QuizService;
+import com.example.backend.service.StudyTimeService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,10 +28,12 @@ public class RaporController {
 
     private final QuizService quizService;
     private final AppUserRepository userRepo;
+    private final StudyTimeService studyTimeService;
 
-    public RaporController(QuizService quizService, AppUserRepository userRepo) {
+    public RaporController(QuizService quizService, AppUserRepository userRepo, StudyTimeService studyTimeService) {
         this.quizService = quizService;
         this.userRepo = userRepo;
+        this.studyTimeService = studyTimeService;
     }
 
     // 🔹 1. Oturum listesini getir (MEVCUT - AYNI KALDI)
@@ -209,6 +218,33 @@ public class RaporController {
             System.out.println("❌❌❌ GRAFİK VERİLERİ ALINAMADI: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Grafik verileri alınamadı: " + e.getMessage());
+        }
+    }
+
+    // 🔹 4. YENİ: Günlük çalışma süreleri getir (Soru çözme + Pomodoro birleştirilmiş)
+    @GetMapping("/daily-study-times")
+    public ResponseEntity<?> getDailyStudyTimes(
+            @RequestParam(required = false, defaultValue = "10") Integer days,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
+            Principal principal
+    ) {
+        if (principal == null) return ResponseEntity.status(401).body("Giriş yapılmamış.");
+        AppUser user = userRepo.findByEmail(principal.getName()).orElse(null);
+        if (user == null) return ResponseEntity.status(401).body("Kullanıcı bulunamadı.");
+
+        try {
+            // Tarih aralığını belirle
+            Instant end = endDate != null ? endDate.atZone(ZoneId.systemDefault()).toInstant() : Instant.now();
+            Instant start = startDate != null ? startDate.atZone(ZoneId.systemDefault()).toInstant() : end.minusSeconds(days * 24 * 60 * 60);
+
+            List<DailyStudyTime> dailyTimes = studyTimeService.getDailyStudyTimes(user, start, end);
+
+            return ResponseEntity.ok(new DailyStudyTimesResponse(dailyTimes));
+        } catch (Exception e) {
+            System.err.println("❌ Günlük çalışma süreleri alınamadı: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Günlük çalışma süreleri alınamadı: " + e.getMessage());
         }
     }
 }

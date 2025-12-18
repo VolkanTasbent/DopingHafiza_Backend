@@ -40,15 +40,23 @@ public class SecurityConfig {
                         // Okuma uçlarını açık bırak (React listeleme için)
                         .requestMatchers(GET, "/api/ders/**").permitAll()
                         .requestMatchers(GET, "/api/sorular/**").permitAll()
+                        .requestMatchers(GET, "/api/konu/**").permitAll() // Konu listeleme
+                        .requestMatchers(GET, "/api/konular/**").permitAll() // Konu listeleme (çoğul)
                         .requestMatchers(GET, "/api/deneme-sinavlari/**").permitAll() // Deneme sınavları okuma
                         .requestMatchers(GET, "/api/deneme-sinavi").permitAll() // Frontend için tekil endpoint (GET - listeleme)
                         .requestMatchers(GET, "/api/deneme-sinavi/**").permitAll() // Frontend için tekil endpoint (GET - detay)
-                        .requestMatchers(GET, "/api/raporlar/**").authenticated() // YENİ
+                        .requestMatchers(GET, "/api/raporlar/**").authenticated() // Raporlar ve günlük performans grafiği
 
                         // Yönetim gerektiren yazma uçları
                         .requestMatchers(POST, "/api/ders/**").hasRole("ADMIN")
                         .requestMatchers(POST, "/api/sorular/**").hasRole("ADMIN")
                         .requestMatchers(DELETE, "/api/sorular/**").hasRole("ADMIN")
+                        .requestMatchers(POST, "/api/konu/**").hasRole("ADMIN") // Konu oluşturma
+                        .requestMatchers(POST, "/api/konular/**").hasRole("ADMIN") // Konu oluşturma (çoğul)
+                        .requestMatchers(PUT, "/api/konu/**").hasRole("ADMIN") // Konu güncelleme
+                        .requestMatchers(PUT, "/api/konular/**").hasRole("ADMIN") // Konu güncelleme (çoğul)
+                        .requestMatchers(DELETE, "/api/konu/**").hasRole("ADMIN") // Konu silme
+                        .requestMatchers(DELETE, "/api/konular/**").hasRole("ADMIN") // Konu silme (çoğul)
                         .requestMatchers(POST, "/api/deneme-sinavlari/**").hasRole("ADMIN")
                         .requestMatchers(POST, "/api/deneme-sinavi").hasRole("ADMIN") // Frontend için tekil endpoint (POST)
                         .requestMatchers(PUT, "/api/deneme-sinavlari/**").hasRole("ADMIN")

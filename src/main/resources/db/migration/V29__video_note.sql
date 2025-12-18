@@ -23,3 +23,9 @@ COMMENT ON TABLE video_note IS 'Video izlerken alınan notlar';
 COMMENT ON COLUMN video_note.timestamp_seconds IS 'Video içindeki zaman damgası (saniye cinsinden)';
 COMMENT ON COLUMN video_note.note_text IS 'Kullanıcının yazdığı not metni';
 
+
+
+
+
+
+

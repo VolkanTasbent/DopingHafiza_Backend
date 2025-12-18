@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.DailyPomodoroStat;
+import com.example.backend.dto.DailyPomodoroStatsResponse;
 import com.example.backend.dto.PomodoroPeriodStats;
 import com.example.backend.dto.PomodoroSessionRequest;
 import com.example.backend.dto.PomodoroSessionResponse;
@@ -12,11 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PomodoroService {
@@ -119,6 +123,67 @@ public class PomodoroService {
         stats.setTotal(new PomodoroPeriodStats(totalCount, totalMinutes));
         
         return stats;
+    }
+
+    @Transactional(readOnly = true)
+    public DailyPomodoroStatsResponse getDailyStats(Long userId, String startDateStr, String endDateStr) {
+        // Tarihleri parse et
+        LocalDate startDate = LocalDate.parse(startDateStr);
+        LocalDate endDate = LocalDate.parse(endDateStr);
+        
+        // Tarih aralığını Instant'a çevir
+        // ÖNEMLİ: Tarihleri UTC'ye göre değil, kullanıcının local timezone'una göre hesapla
+        ZoneId zoneId = ZoneId.systemDefault();
+        
+        // Başlangıç: günün başlangıcı (00:00:00) local timezone'da
+        Instant startInstant = startDate.atStartOfDay(zoneId).toInstant();
+        // Bitiş: günün sonu (23:59:59.999) local timezone'da
+        Instant endInstant = endDate.atTime(23, 59, 59, 999_000_000).atZone(zoneId).toInstant();
+        
+        // Pomodoro session'larını getir
+        List<PomodoroSession> sessions = repository.findByUserIdAndCompletedAtBetween(userId, startInstant, endInstant);
+        
+        // Günlük istatistikleri hesapla
+        Map<String, DailyPomodoroStat> dailyStatsMap = new HashMap<>();
+        
+        // Tüm günleri başlat (0 ile)
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            String dateKey = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            dailyStatsMap.put(dateKey, new DailyPomodoroStat(dateKey, 0, 0));
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        // Session'ları günlere göre grupla
+        // ÖNEMLİ: completedAt'ı kullanıcının local timezone'una göre tarihe çevir
+        for (PomodoroSession session : sessions) {
+            if (session.getCompletedAt() == null) continue;
+            
+            // Tarihi kullanıcının local timezone'una göre hesapla
+            // Bu, pomodoro'nun tamamlandığı günü doğru şekilde belirler
+            // Instant zaten UTC'de, direkt local timezone'a çevir
+            LocalDate sessionDate = session.getCompletedAt().atZone(zoneId).toLocalDate();
+            String dateKey = sessionDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            
+            // Eğer dateKey map'te yoksa (tarih aralığı dışında), atla
+            // Bu durumda session tarih aralığı dışında olabilir (timezone farkı nedeniyle)
+            DailyPomodoroStat stat = dailyStatsMap.get(dateKey);
+            if (stat != null) {
+                stat.setCount(stat.getCount() + 1);
+                stat.setMinutes(stat.getMinutes() + (session.getDuration() != null ? session.getDuration() : 0));
+            } else {
+                // Debug: Tarih aralığı dışında bir tarih bulundu
+                System.out.println("⚠️ Pomodoro session tarihi aralık dışında: " + dateKey + 
+                    " (completedAt: " + session.getCompletedAt() + 
+                    ", startDate: " + startDateStr + ", endDate: " + endDateStr + ")");
+            }
+        }
+        
+        // Listeye çevir ve sırala
+        List<DailyPomodoroStat> dailyStats = new ArrayList<>(dailyStatsMap.values());
+        dailyStats.sort(Comparator.comparing(DailyPomodoroStat::getDate));
+        
+        return new DailyPomodoroStatsResponse(dailyStats);
     }
 }
 

@@ -27,3 +27,9 @@ COMMENT ON COLUMN user_activity.activity_subtitle IS 'Aktivite alt başlığı (
 COMMENT ON COLUMN user_activity.activity_icon IS 'Aktivite ikonu: document, video, book, grid, abc';
 COMMENT ON COLUMN user_activity.metadata IS 'Ek bilgiler (JSON formatında: soru sayısı, süre, net vb.)';
 
+
+
+
+
+
+

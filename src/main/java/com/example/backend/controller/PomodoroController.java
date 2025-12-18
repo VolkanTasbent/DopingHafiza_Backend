@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.DailyPomodoroStatsResponse;
 import com.example.backend.dto.PomodoroSessionRequest;
 import com.example.backend.dto.PomodoroSessionResponse;
 import com.example.backend.dto.PomodoroStatsResponse;
@@ -49,6 +50,26 @@ public class PomodoroController {
         PomodoroStatsResponse stats = pomodoroService.getStats(user.getId());
         return ResponseEntity.ok(stats);
     }
+
+    @GetMapping("/daily-stats")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<DailyPomodoroStatsResponse> getDailyStats(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        DailyPomodoroStatsResponse response = pomodoroService.getDailyStats(user.getId(), startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
 }
+
+
+
+
+
 
 

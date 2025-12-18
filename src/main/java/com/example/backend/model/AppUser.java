@@ -44,6 +44,9 @@ public class AppUser {
     @Column(name = "dark_mode")
     private Boolean darkMode = false;
 
+    @Column(name = "puan")
+    private Integer puan = 0;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -82,5 +85,13 @@ public class AppUser {
 
     public void setDarkMode(Boolean darkMode) {
         this.darkMode = darkMode;
+    }
+
+    public Integer getPuan() {
+        return puan != null ? puan : 0;
+    }
+
+    public void setPuan(Integer puan) {
+        this.puan = puan;
     }
 }

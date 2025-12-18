@@ -1,6 +1,8 @@
 package com.example.backend.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "konu", uniqueConstraints = {
@@ -26,6 +28,13 @@ public class Konu {
     @Column(name = "konu_anlatim_videosu_url", length = 500)
     private String konuAnlatimVideosuUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String aciklama;
+
+    @OneToMany(mappedBy = "konu", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("siralama ASC")
+    private List<KonuVideo> videolar = new ArrayList<>();
+
     public Long getId() { return id; }
     public Ders getDers() { return ders; }
     public void setDers(Ders ders) { this.ders = ders; }
@@ -40,4 +49,10 @@ public class Konu {
     
     public String getKonuAnlatimVideosuUrl() { return konuAnlatimVideosuUrl; }
     public void setKonuAnlatimVideosuUrl(String konuAnlatimVideosuUrl) { this.konuAnlatimVideosuUrl = konuAnlatimVideosuUrl; }
+    
+    public String getAciklama() { return aciklama; }
+    public void setAciklama(String aciklama) { this.aciklama = aciklama; }
+    
+    public List<KonuVideo> getVideolar() { return videolar; }
+    public void setVideolar(List<KonuVideo> videolar) { this.videolar = videolar; }
 }

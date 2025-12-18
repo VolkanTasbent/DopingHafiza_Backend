@@ -7,6 +7,7 @@ public class VideoNoteResponse {
     private Long id;
     private Long userId;
     private Long konuId;
+    private String videoId;
     private String videoUrl;
     private String noteText;
     private Integer timestampSeconds;
@@ -19,6 +20,7 @@ public class VideoNoteResponse {
         response.setId(note.getId());
         response.setUserId(note.getUserId());
         response.setKonuId(note.getKonuId());
+        response.setVideoId(note.getVideoId());
         response.setVideoUrl(note.getVideoUrl());
         response.setNoteText(note.getNoteText());
         response.setTimestampSeconds(note.getTimestampSeconds());
@@ -62,6 +64,14 @@ public class VideoNoteResponse {
 
     public void setKonuId(Long konuId) {
         this.konuId = konuId;
+    }
+
+    public String getVideoId() {
+        return videoId;
+    }
+
+    public void setVideoId(String videoId) {
+        this.videoId = videoId;
     }
 
     public String getVideoUrl() {
@@ -112,4 +122,9 @@ public class VideoNoteResponse {
         this.updatedAt = updatedAt;
     }
 }
+
+
+
+
+
 
