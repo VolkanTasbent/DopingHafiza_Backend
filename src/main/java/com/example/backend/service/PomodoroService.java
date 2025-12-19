@@ -1,11 +1,13 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.ActivePomodoroResponse;
 import com.example.backend.dto.DailyPomodoroStat;
 import com.example.backend.dto.DailyPomodoroStatsResponse;
 import com.example.backend.dto.PomodoroPeriodStats;
 import com.example.backend.dto.PomodoroSessionRequest;
 import com.example.backend.dto.PomodoroSessionResponse;
 import com.example.backend.dto.PomodoroStatsResponse;
+import com.example.backend.dto.StartPomodoroRequest;
 import com.example.backend.model.PomodoroSession;
 import com.example.backend.model.UserActivity;
 import com.example.backend.repository.PomodoroSessionRepository;
@@ -20,12 +22,45 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 public class PomodoroService {
     private final PomodoroSessionRepository repository;
     private final UserActivityRepository userActivityRepository;
+    
+    // Aktif pomodoro session'larını yönet (userId -> ActivePomodoroInfo)
+    private final Map<Long, ActivePomodoroInfo> activeSessions = new ConcurrentHashMap<>();
+    
+    // Aktif pomodoro bilgisi için inner class
+    private static class ActivePomodoroInfo {
+        private final Long userId;
+        private final Integer duration; // Dakika
+        private final Instant startedAt;
+        private final Instant expiresAt;
+        
+        public ActivePomodoroInfo(Long userId, Integer duration, Instant startedAt) {
+            this.userId = userId;
+            this.duration = duration;
+            this.startedAt = startedAt;
+            this.expiresAt = startedAt.plusSeconds(duration * 60L);
+        }
+        
+        public Long getUserId() { return userId; }
+        public Integer getDuration() { return duration; }
+        public Instant getStartedAt() { return startedAt; }
+        public Instant getExpiresAt() { return expiresAt; }
+        
+        public int getRemainingSeconds() {
+            long remaining = expiresAt.getEpochSecond() - Instant.now().getEpochSecond();
+            return (int) Math.max(0, remaining);
+        }
+        
+        public boolean isExpired() {
+            return Instant.now().isAfter(expiresAt);
+        }
+    }
 
     public PomodoroService(PomodoroSessionRepository repository, UserActivityRepository userActivityRepository) {
         this.repository = repository;
@@ -184,6 +219,81 @@ public class PomodoroService {
         dailyStats.sort(Comparator.comparing(DailyPomodoroStat::getDate));
         
         return new DailyPomodoroStatsResponse(dailyStats);
+    }
+    
+    /**
+     * Aktif pomodoro session'ını başlat (kullanıcıya özel)
+     */
+    public ActivePomodoroResponse startPomodoro(Long userId, StartPomodoroRequest request) {
+        // Eğer kullanıcının zaten aktif bir session'ı varsa, onu durdur
+        if (activeSessions.containsKey(userId)) {
+            System.out.println("⚠️ Kullanıcı " + userId + " için zaten aktif bir pomodoro var, önceki durduruluyor...");
+            stopPomodoro(userId);
+        }
+        
+        Instant now = Instant.now();
+        ActivePomodoroInfo session = new ActivePomodoroInfo(userId, request.getDuration(), now);
+        activeSessions.put(userId, session);
+        
+        System.out.println("✅ Pomodoro başlatıldı - User ID: " + userId + ", Duration: " + request.getDuration() + " dakika");
+        
+        return new ActivePomodoroResponse(
+            userId,
+            session.getDuration(),
+            session.getRemainingSeconds(),
+            session.getStartedAt(),
+            session.getExpiresAt(),
+            true
+        );
+    }
+    
+    /**
+     * Aktif pomodoro session'ını durdur (kullanıcıya özel)
+     */
+    public ActivePomodoroResponse stopPomodoro(Long userId) {
+        ActivePomodoroInfo session = activeSessions.remove(userId);
+        
+        if (session != null) {
+            System.out.println("⏹️ Pomodoro durduruldu - User ID: " + userId);
+            return new ActivePomodoroResponse(
+                userId,
+                session.getDuration(),
+                0,
+                session.getStartedAt(),
+                session.getExpiresAt(),
+                false
+            );
+        }
+        
+        System.out.println("⚠️ Kullanıcı " + userId + " için aktif pomodoro bulunamadı");
+        return new ActivePomodoroResponse(userId, null, 0, null, null, false);
+    }
+    
+    /**
+     * Kullanıcının aktif pomodoro session'ını getir (kullanıcıya özel)
+     */
+    public ActivePomodoroResponse getActivePomodoro(Long userId) {
+        ActivePomodoroInfo session = activeSessions.get(userId);
+        
+        if (session == null) {
+            return new ActivePomodoroResponse(userId, null, 0, null, null, false);
+        }
+        
+        // Eğer session süresi dolmuşsa, otomatik olarak durdur
+        if (session.isExpired()) {
+            System.out.println("⏰ Pomodoro süresi doldu - User ID: " + userId);
+            activeSessions.remove(userId);
+            return new ActivePomodoroResponse(userId, null, 0, null, null, false);
+        }
+        
+        return new ActivePomodoroResponse(
+            userId,
+            session.getDuration(),
+            session.getRemainingSeconds(),
+            session.getStartedAt(),
+            session.getExpiresAt(),
+            true
+        );
     }
 }
 

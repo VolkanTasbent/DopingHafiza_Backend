@@ -18,3 +18,4 @@ public interface KonuVideoRepository extends JpaRepository<KonuVideo, Long> {
 }
 
 
+

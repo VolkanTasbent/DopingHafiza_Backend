@@ -13,3 +13,4 @@ COMMENT ON COLUMN app_user.puan IS 'Kullanıcının performans puanı (dinamik h
 
 
 
+

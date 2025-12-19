@@ -29,3 +29,4 @@ COMMENT ON COLUMN video_note.note_text IS 'Kullanıcının yazdığı not metni'
 
 
 
+

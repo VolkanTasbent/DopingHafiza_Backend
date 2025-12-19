@@ -24,3 +24,4 @@ COMMENT ON COLUMN pomodoro_session.completed_at IS 'Pomodoro oturumunun tamamlan
 
 
 
+

@@ -15,3 +15,4 @@ COMMENT ON COLUMN video_note.video_id IS 'Video ID (konuId_videoIndex formatınd
 -- WHERE video_id IS NULL;
 
 
+

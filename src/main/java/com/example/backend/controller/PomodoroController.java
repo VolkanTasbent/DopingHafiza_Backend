@@ -1,9 +1,11 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.ActivePomodoroResponse;
 import com.example.backend.dto.DailyPomodoroStatsResponse;
 import com.example.backend.dto.PomodoroSessionRequest;
 import com.example.backend.dto.PomodoroSessionResponse;
 import com.example.backend.dto.PomodoroStatsResponse;
+import com.example.backend.dto.StartPomodoroRequest;
 import com.example.backend.model.AppUser;
 import com.example.backend.repository.AppUserRepository;
 import com.example.backend.service.PomodoroService;
@@ -24,6 +26,55 @@ public class PomodoroController {
     public PomodoroController(PomodoroService pomodoroService, AppUserRepository userRepository) {
         this.pomodoroService = pomodoroService;
         this.userRepository = userRepository;
+    }
+    
+    /**
+     * Aktif pomodoro session'ını başlat (kullanıcıya özel)
+     */
+    @PostMapping("/start")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ActivePomodoroResponse> startPomodoro(
+            @Valid @RequestBody StartPomodoroRequest request,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        System.out.println("📥 Pomodoro başlatma isteği - User ID: " + user.getId() + ", Duration: " + request.getDuration() + " dakika");
+        
+        ActivePomodoroResponse response = pomodoroService.startPomodoro(user.getId(), request);
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Aktif pomodoro session'ını durdur (kullanıcıya özel)
+     */
+    @PostMapping("/stop")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ActivePomodoroResponse> stopPomodoro(Authentication authentication) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        System.out.println("📥 Pomodoro durdurma isteği - User ID: " + user.getId());
+        
+        ActivePomodoroResponse response = pomodoroService.stopPomodoro(user.getId());
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Kullanıcının aktif pomodoro session'ını getir (kullanıcıya özel)
+     */
+    @GetMapping("/active")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ActivePomodoroResponse> getActivePomodoro(Authentication authentication) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        ActivePomodoroResponse response = pomodoroService.getActivePomodoro(user.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/session")

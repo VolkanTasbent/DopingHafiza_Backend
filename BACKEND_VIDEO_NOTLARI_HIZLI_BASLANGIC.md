@@ -431,3 +431,4 @@ WHERE konu_id = 123 AND video_id = '123_0' AND user_id = 1;
 
 **Son Güncelleme:** Backend implementasyonu tamamlandı ve test edilmeye hazır.
 
+

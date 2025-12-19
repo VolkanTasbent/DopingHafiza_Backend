@@ -15,3 +15,4 @@ COMMENT ON COLUMN app_user.hedef_siralama IS 'Kullanıcının hedef sıralaması
 
 
 
+

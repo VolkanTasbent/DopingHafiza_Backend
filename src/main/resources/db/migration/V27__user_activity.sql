@@ -33,3 +33,4 @@ COMMENT ON COLUMN user_activity.metadata IS 'Ek bilgiler (JSON formatında: soru
 
 
 
+

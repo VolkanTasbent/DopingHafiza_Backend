@@ -7,3 +7,4 @@ COMMENT ON COLUMN konu.aciklama IS 'Konu açıklaması (opsiyonel)';
 
 
 
+

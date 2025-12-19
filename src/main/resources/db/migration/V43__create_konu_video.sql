@@ -19,3 +19,4 @@ COMMENT ON COLUMN konu_video.video_adi IS 'Video adı (opsiyonel)';
 COMMENT ON COLUMN konu_video.siralama IS 'Video sıralaması (küçükten büyüğe)';
 
 
+

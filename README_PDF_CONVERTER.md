@@ -73,3 +73,4 @@ Script çalıştıktan sonra:
 
 
 
+

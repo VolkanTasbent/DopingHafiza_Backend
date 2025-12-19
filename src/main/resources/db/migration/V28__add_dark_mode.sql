@@ -13,3 +13,4 @@ COMMENT ON COLUMN app_user.dark_mode IS 'Kullanıcının dark mode tercihi';
 
 
 
+
