@@ -10,5 +10,11 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  ai-ml:
+    build:
+      context: ./ai-ml-service
+    container_name: hafiza-ai-ml
+    ports:
+      - "8001:8001"
 volumes:
   pgdata:

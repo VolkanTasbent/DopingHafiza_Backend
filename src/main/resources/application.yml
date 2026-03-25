@@ -41,3 +41,8 @@ logging:
   level:
     org.springframework.web: INFO
     org.springframework.security: INFO
+
+ai:
+  ml:
+    enabled: ${AI_ML_ENABLED:false}
+    base-url: ${AI_ML_BASE_URL:http://localhost:8001}

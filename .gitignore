@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+.run-pids/
+.run-logs/
+ai-ml-service/.venv/
+**/__pycache__/
+*.class

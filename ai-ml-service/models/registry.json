@@ -1,0 +1,9 @@
+{
+  "active_version": "v20260318_134454",
+  "active_model_path": "topic_risk_model.joblib",
+  "trained_at_utc": "2026-03-18T13:44:54.904262Z",
+  "data_rows": 1513,
+  "metrics": {
+    "auc": 0.9994
+  }
+}
