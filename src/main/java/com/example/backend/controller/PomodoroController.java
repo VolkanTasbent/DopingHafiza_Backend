@@ -27,7 +27,7 @@ public class PomodoroController {
         this.pomodoroService = pomodoroService;
         this.userRepository = userRepository;
     }
-    
+
     /**
      * Aktif pomodoro session'ını başlat (kullanıcıya özel)
      */
@@ -40,13 +40,13 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         System.out.println("📥 Pomodoro başlatma isteği - User ID: " + user.getId() + ", Duration: " + request.getDuration() + " dakika");
-        
+
         ActivePomodoroResponse response = pomodoroService.startPomodoro(user.getId(), request);
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Aktif pomodoro session'ını durdur (kullanıcıya özel)
      */
@@ -56,13 +56,13 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         System.out.println("📥 Pomodoro durdurma isteği - User ID: " + user.getId());
-        
+
         ActivePomodoroResponse response = pomodoroService.stopPomodoro(user.getId());
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Kullanıcının aktif pomodoro session'ını getir (kullanıcıya özel)
      */
@@ -72,8 +72,35 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         ActivePomodoroResponse response = pomodoroService.getActivePomodoro(user.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Widget için pomodoro durumunu getir
+     * NOT: Bu endpoint /active ile aynı veriyi döner,
+     * sadece frontend'de widget için ayrı bir endpoint olması açısından eklenmiştir
+     */
+    @GetMapping("/widget-status")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ActivePomodoroResponse> getWidgetStatus(Authentication authentication) {
+        String email = authentication.getName();
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        System.out.println("🎯 Widget durumu isteği - User ID: " + user.getId());
+
+        ActivePomodoroResponse response = pomodoroService.getActivePomodoro(user.getId());
+
+        // Widget için özel log (opsiyonel)
+        if (response.isActive()) {
+            System.out.println("🔄 Widget: Aktif pomodoro bulundu - " +
+                    response.getRemainingSeconds() + " saniye kaldı");
+        } else {
+            System.out.println("📭 Widget: Aktif pomodoro bulunamadı");
+        }
+
         return ResponseEntity.ok(response);
     }
 
@@ -86,7 +113,7 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         PomodoroSessionResponse response = pomodoroService.saveSession(user.getId(), request);
         return ResponseEntity.ok(response);
     }
@@ -97,7 +124,7 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         PomodoroStatsResponse stats = pomodoroService.getStats(user.getId());
         return ResponseEntity.ok(stats);
     }
@@ -112,15 +139,8 @@ public class PomodoroController {
         String email = authentication.getName();
         AppUser user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         DailyPomodoroStatsResponse response = pomodoroService.getDailyStats(user.getId(), startDate, endDate);
         return ResponseEntity.ok(response);
     }
 }
-
-
-
-
-
-
-
