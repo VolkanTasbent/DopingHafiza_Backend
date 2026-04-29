@@ -3,8 +3,8 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/myappdb
-    username: myappuser
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:5432/myappdb}
+    username: ${SPRING_DATASOURCE_USERNAME:myappuser}
     # Env varsa onu kullan, yoksa 1
     password: ${DB_PASSWORD:1}
   jpa:
