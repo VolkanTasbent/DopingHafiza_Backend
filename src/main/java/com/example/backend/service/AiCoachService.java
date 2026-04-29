@@ -73,46 +73,84 @@ public class AiCoachService {
 
         AiAnalyzeResponseDTO analysis = analyzeWeakTopics(user, days, 8);
         List<AiStudyTaskDTO> tasks = new ArrayList<>();
-        int remaining = safeMinutes;
+        /*
+         * Gunluk hedef dakika (safeMinutes) kullanicinin her musait gune yaymak istedigi ust sudur.
+         * Gorev listesi tek gunluk degil; haftalik takvimde gun basina ~safeMinutes dolsun diye
+         * yaklasik 7 gunluk toplam sure kadar gorev uretilir (frontend gunluk cap ile dagitir).
+         */
+        final int daysPerWeek = 7;
+        int weeklyBudget = Math.min(safeMinutes * daysPerWeek, safeMinutes * 31);
+        int remaining = weeklyBudget;
         int priority = 1;
+        final int maxTasks = 220;
 
-        for (AiWeakTopicDTO t : analysis.weakTopics()) {
-            if (remaining <= 0) break;
-
-            if (!"test".equals(safeMode)) {
-                int videoMinutes = Math.min(Math.max(12, safeMinutes / 6), remaining);
+        List<AiWeakTopicDTO> weak = analysis.weakTopics();
+        if (weak.isEmpty()) {
+            while (remaining > 0 && tasks.size() < maxTasks) {
+                int chunk = Math.min(remaining, safeMinutes);
                 tasks.add(new AiStudyTaskDTO(
-                        "video",
-                        t.konuAd() + " konu videosu",
-                        t.dersAd() + " > " + t.konuAd() + " icin hedefli tekrar videosu izle.",
-                        videoMinutes,
+                        "review",
+                        "Genel tekrar blogu",
+                        "Son cozdugun konulardan karisik soru seti veya ozet tekrar yap.",
+                        chunk,
                         priority++
                 ));
-                remaining -= videoMinutes;
+                remaining -= chunk;
+            }
+        } else {
+            int wi = 0;
+            int noProgressRounds = 0;
+            while (remaining > 0 && tasks.size() < maxTasks) {
+                AiWeakTopicDTO t = weak.get(wi % weak.size());
+                wi++;
+
+                int before = remaining;
+
+                if (!"test".equals(safeMode) && remaining >= 12) {
+                    int videoMinutes = Math.min(Math.max(12, safeMinutes / 6), remaining);
+                    tasks.add(new AiStudyTaskDTO(
+                            "video",
+                            t.konuAd() + " konu videosu",
+                            t.dersAd() + " > " + t.konuAd() + " icin hedefli tekrar videosu izle.",
+                            videoMinutes,
+                            priority++
+                    ));
+                    remaining -= videoMinutes;
+                }
+
+                if (remaining <= 0) break;
+
+                if (!"video".equals(safeMode) && remaining >= 15) {
+                    int testMinutes = Math.min(Math.max(15, safeMinutes / 5), remaining);
+                    tasks.add(new AiStudyTaskDTO(
+                            "quiz",
+                            t.konuAd() + " test seti",
+                            "Bu konuda 20-30 soru coz ve yanlislari not al.",
+                            testMinutes,
+                            priority++
+                    ));
+                    remaining -= testMinutes;
+                }
+
+                if (remaining == before) {
+                    noProgressRounds++;
+                    if (noProgressRounds >= weak.size() * 3) {
+                        break;
+                    }
+                } else {
+                    noProgressRounds = 0;
+                }
             }
 
-            if (remaining <= 0) break;
-            if (!"video".equals(safeMode)) {
-                int testMinutes = Math.min(Math.max(15, safeMinutes / 5), remaining);
+            if (remaining > 0) {
                 tasks.add(new AiStudyTaskDTO(
-                        "quiz",
-                        t.konuAd() + " test seti",
-                        "Bu konuda 20-30 soru coz ve yanlislari not al.",
-                        testMinutes,
-                        priority++
+                        "review",
+                        "Gun sonu tekrar",
+                        "Bu hafta zorlandigin konulardan kisa bir tekrar blogu.",
+                        remaining,
+                        priority
                 ));
-                remaining -= testMinutes;
             }
-        }
-
-        if (remaining > 0) {
-            tasks.add(new AiStudyTaskDTO(
-                    "review",
-                    "Gun sonu tekrar",
-                    "Bugun cozemede zorlandigin 5 soruyu yeniden cozmeyi dene.",
-                    remaining,
-                    priority
-            ));
         }
 
         String summary = buildPlanSummary(analysis, safeMinutes, safeMode);
@@ -505,7 +543,7 @@ public class AiCoachService {
     private String buildPlanSummary(AiAnalyzeResponseDTO analysis, int dailyMinutes, String mode) {
         String topWeak = analysis.weakTopics().isEmpty() ? "genel tekrar" : analysis.weakTopics().get(0).konuAd();
         return "Gunluk " + dailyMinutes + " dakikalik " + mode
-                + " plan hazirlandi. Oncelik: " + topWeak
+                + " hedefi ile yaklasik 7 gunluk gorev havuzu hazirlandi. Oncelik: " + topWeak
                 + ". Plan, son " + analysis.analyzedDays() + " gun verine gore olusturuldu.";
     }
 
