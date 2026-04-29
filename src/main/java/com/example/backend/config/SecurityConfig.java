@@ -45,7 +45,7 @@ public class SecurityConfig {
                         // Tarayıcı CORS preflight — JWT yok; burada takılırsa header gelmez
                         .requestMatchers(OPTIONS, "/**").permitAll()
                         // Açık uçlar
-                        .requestMatchers("/health", "/api/auth/**").permitAll()
+                        .requestMatchers("/health", "/uptime", "/api/auth/**").permitAll()
                         // Okuma uçlarını açık bırak (React listeleme için)
                         .requestMatchers(GET, "/api/ders/**").permitAll()
                         .requestMatchers(GET, "/api/sorular/**").permitAll()
