@@ -40,6 +40,8 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        // Tarayıcı CORS preflight — JWT yok; burada takılırsa header gelmez
+                        .requestMatchers(OPTIONS, "/**").permitAll()
                         // Açık uçlar
                         .requestMatchers("/health", "/api/auth/**").permitAll()
                         // Okuma uçlarını açık bırak (React listeleme için)
@@ -119,7 +121,11 @@ public class SecurityConfig {
         Set<String> patterns = new LinkedHashSet<>(Arrays.asList(
                 "http://localhost:5173",
                 "http://localhost:3000",
-                "https://*.vercel.app"
+                /* Tek segment: foo.vercel.app */
+                "https://*.vercel.app",
+                /* Vercel preview (deployment-hash-team...) iç içe alt alan adları */
+                "https://*.*.vercel.app",
+                "https://*.*.*.vercel.app"
         ));
         if (extraOriginsCsv != null && !extraOriginsCsv.isBlank()) {
             for (String part : extraOriginsCsv.split(",")) {
