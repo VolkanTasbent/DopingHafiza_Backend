@@ -15,11 +15,16 @@ spring:
       ddl-auto: update
     properties:
       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      # search_path boş geldiğinde JPA'nın kullanacağı şema
+      hibernate.default_schema: ${DB_SCHEMA:public}
 
   flyway:
     enabled: true
     # Klasörün "db.migration" (noktalı) olduğu için şart:
     locations: classpath:db.migration
+    # Neon'da search_path boş olduğunda Flyway'nin kesin kullanacağı şema
+    default-schema: ${DB_SCHEMA:public}
+    schemas: ${DB_SCHEMA:public}
     # Üretimde temizliği engellemek iyi pratik:
     clean-disabled: true
     # Eğer mevcut bir şemaya sonradan geçiyorsan şunları AÇABİLİRSİN:

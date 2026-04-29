@@ -9,6 +9,8 @@ MOBILE_DIR="$ROOT_DIR/hafiza-mobile"
 
 WEB_PORT="${DEV_ALL_WEB_PORT:-5173}"
 MOBILE_PORT="${DEV_ALL_MOBILE_PORT:-8081}"
+# 1: Expo Metro --tunnel (farkli ag; ngrok gerekir, bkz. NGROK_AUTHTOKEN). 0: LAN (aynı Wi-Fi + dogru IP).
+DEV_ALL_EXPO_TUNNEL="${DEV_ALL_EXPO_TUNNEL:-0}"
 TRAIN_FLAG="${1:-}"
 
 WEB_PID_FILE="$PID_DIR/web.pid"
@@ -112,15 +114,26 @@ start_mobile() {
     return
   fi
 
-  echo "Mobile Metro baslatiliyor (port $MOBILE_PORT)..."
+  if [[ "$DEV_ALL_EXPO_TUNNEL" == "1" ]]; then
+    echo "Mobile Metro baslatiliyor (port $MOBILE_PORT, TUNNEL — telefon farkli agdan baglanabilir)..."
+    EXPO_EXTRA=(--tunnel)
+  else
+    echo "Mobile Metro baslatiliyor (port $MOBILE_PORT, LAN)..."
+    EXPO_EXTRA=(--lan)
+  fi
   (
     cd "$MOBILE_DIR"
-    nohup env CI=false npx expo start --port "$MOBILE_PORT" -c > "$LOG_DIR/mobile.log" 2>&1 &
+    # Tunnel icin: https://dashboard.ngrok.com/get-started/your-authtoken — export NGROK_AUTHTOKEN=...
+    nohup env CI=false NGROK_AUTHTOKEN="${NGROK_AUTHTOKEN:-}" npx expo start --port "$MOBILE_PORT" -c "${EXPO_EXTRA[@]}" > "$LOG_DIR/mobile.log" 2>&1 &
     echo $! > "$MOBILE_PID_FILE"
   )
 
-  if ! wait_port_open "$MOBILE_PORT" 40 1; then
-    echo "Mobile Metro port check basarisiz."
+  local metro_retries=40
+  if [[ "$DEV_ALL_EXPO_TUNNEL" == "1" ]]; then
+    metro_retries=120
+  fi
+  if ! wait_port_open "$MOBILE_PORT" "$metro_retries" 1; then
+    echo "Mobile Metro port check basarisiz. Log: $LOG_DIR/mobile.log"
     exit 1
   fi
 
@@ -139,4 +152,9 @@ echo
 echo "Hazir."
 echo "Web:    http://localhost:${WEB_PORT}"
 echo "Mobile: Metro http://localhost:${MOBILE_PORT}"
+if [[ "$DEV_ALL_EXPO_TUNNEL" == "1" ]]; then
+  echo "Expo:   tunnel acik; QR / link mobile.log icinde (LAN sarti yok)."
+else
+  echo "Expo:   LAN; telefon ile Mac ayni Wi-Fi olmali. Tunnel icin: DEV_ALL_EXPO_TUNNEL=1"
+fi
 echo "Durum:  bash \"$SCRIPTS_DIR/status_dev_all.sh\""
