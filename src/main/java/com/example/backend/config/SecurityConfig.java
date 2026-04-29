@@ -1,6 +1,7 @@
 package com.example.backend.config;
 
 import com.example.backend.security.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.http.HttpMethod.*;
 
@@ -103,12 +108,32 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${CORS_ALLOWED_ORIGINS:}") String extraOriginsCsv
+    ) {
         var c = new CorsConfiguration();
-        c.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:3000"));
-        c.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        /*
+         * credentials=true ile wildcard origin kullanılamaz; pattern kullanılır.
+         * Vercel preview/production: https://*.vercel.app
+         */
+        Set<String> patterns = new LinkedHashSet<>(Arrays.asList(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://*.vercel.app"
+        ));
+        if (extraOriginsCsv != null && !extraOriginsCsv.isBlank()) {
+            for (String part : extraOriginsCsv.split(",")) {
+                String t = part.trim();
+                if (!t.isEmpty()) {
+                    patterns.add(t);
+                }
+            }
+        }
+        c.setAllowedOriginPatterns(new ArrayList<>(patterns));
+        c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         c.setAllowedHeaders(List.of("*"));
         c.setAllowCredentials(true);
+        c.setMaxAge(3600L);
         var s = new UrlBasedCorsConfigurationSource();
         s.registerCorsConfiguration("/**", c);
         return s;

@@ -21,7 +21,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/files/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+                .allowedOriginPatterns(
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "https://*.vercel.app"
+                )
                 .allowedMethods("GET", "HEAD")
                 .allowCredentials(false)
                 .maxAge(3600);
