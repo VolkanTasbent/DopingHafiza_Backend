@@ -10,7 +10,6 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/quiz")
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:3000"}, allowCredentials = "true")
 public class QuizController {
     private final QuizService service;
     private final AppUserRepository userRepo;

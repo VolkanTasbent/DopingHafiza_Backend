@@ -19,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cevap")
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:3000"}, allowCredentials = "true")
 public class CevapController {
     private final QuizService quizService;
     private final AppUserRepository userRepo;

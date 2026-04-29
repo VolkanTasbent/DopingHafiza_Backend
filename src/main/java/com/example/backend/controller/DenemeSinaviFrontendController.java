@@ -20,7 +20,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/deneme-sinavi")
-@CrossOrigin(origins = {"http://localhost:5173","http://localhost:3000"}, allowCredentials = "true")
 public class DenemeSinaviFrontendController {
     private final DenemeSinaviService service;
     private final QuizService quizService;
