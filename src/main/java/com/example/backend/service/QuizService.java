@@ -5,6 +5,8 @@ import com.example.backend.model.*;
 import com.example.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -201,18 +203,24 @@ public class QuizService {
     /** ✅ Kullanıcının rapor özetlerini listeler */
     @Transactional(readOnly = true)
     public List<RaporOzetDTO> listOzetForUser(AppUser user, Integer limit) {
+        int pageSize = limit != null ? limit : 20;
+        var latestFirst = PageRequest.of(
+                0,
+                pageSize,
+                Sort.by(Sort.Order.desc("finishedAt"), Sort.Order.desc("id"))
+        );
         // Admin kontrolü: Admin ise tüm raporları getir, normal kullanıcı ise sadece kendi raporlarını
         org.springframework.data.domain.Page<QuizOturumu> page;
         if (user.getRole() != null && user.getRole().equals("ADMIN")) {
             // Admin: Tüm raporları getir
             page = oturumRepo.findAll(
-                    org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
+                    latestFirst
             );
         } else {
             // Normal kullanıcı: Sadece kendi raporlarını getir
             page = oturumRepo.findByUser(
                     user,
-                    org.springframework.data.domain.PageRequest.of(0, limit != null ? limit : 20)
+                    latestFirst
             );
         }
         
