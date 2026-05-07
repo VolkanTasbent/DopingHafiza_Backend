@@ -10,6 +10,9 @@ public class UpdateUserDTO {
     private String hedefBolum;
     private java.math.BigDecimal hedefPuan;
     private Boolean darkMode;
+    private Integer puan;
+    private Integer altin;
+    private String gamificationState;
 
     // Getters ve Setters
     public String getAd() { return ad; }
@@ -38,6 +41,15 @@ public class UpdateUserDTO {
 
     public Boolean getDarkMode() { return darkMode; }
     public void setDarkMode(Boolean darkMode) { this.darkMode = darkMode; }
+
+    public Integer getPuan() { return puan; }
+    public void setPuan(Integer puan) { this.puan = puan; }
+
+    public Integer getAltin() { return altin; }
+    public void setAltin(Integer altin) { this.altin = altin; }
+
+    public String getGamificationState() { return gamificationState; }
+    public void setGamificationState(String gamificationState) { this.gamificationState = gamificationState; }
 }
 
 

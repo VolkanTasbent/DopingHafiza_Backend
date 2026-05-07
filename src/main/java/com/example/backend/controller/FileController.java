@@ -211,7 +211,10 @@ public class FileController {
             user.getHedefUniversite(),
             user.getHedefBolum(),
             user.getHedefPuan(),
-            user.getDarkMode() != null ? user.getDarkMode() : false
+            user.getDarkMode() != null ? user.getDarkMode() : false,
+            user.getPuan(),
+            user.getAltin(),
+            user.getGamificationState()
         );
     }
 

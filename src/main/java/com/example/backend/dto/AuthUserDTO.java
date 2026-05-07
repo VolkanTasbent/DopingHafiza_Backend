@@ -11,5 +11,8 @@ public record AuthUserDTO(
     String hedefUniversite,
     String hedefBolum,
     java.math.BigDecimal hedefPuan,
-    Boolean darkMode
+    Boolean darkMode,
+    Integer puan,
+    Integer altin,
+    String gamificationState
 ) {}

@@ -47,6 +47,12 @@ public class AppUser {
     @Column(name = "puan")
     private Integer puan = 0;
 
+    @Column(name = "altin")
+    private Integer altin = 0;
+
+    @Column(name = "gamification_state", columnDefinition = "TEXT")
+    private String gamificationState;
+
     // getters/setters
     public Long getId() { return id; }
     public String getEmail() { return email; }
@@ -93,5 +99,21 @@ public class AppUser {
 
     public void setPuan(Integer puan) {
         this.puan = puan;
+    }
+
+    public Integer getAltin() {
+        return altin != null ? altin : 0;
+    }
+
+    public void setAltin(Integer altin) {
+        this.altin = altin;
+    }
+
+    public String getGamificationState() {
+        return gamificationState;
+    }
+
+    public void setGamificationState(String gamificationState) {
+        this.gamificationState = gamificationState;
     }
 }

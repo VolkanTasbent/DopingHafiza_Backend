@@ -39,7 +39,10 @@ public class AuthService {
         u = repo.save(u);
         return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
                 u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(),
-                u.getDarkMode() != null ? u.getDarkMode() : false);
+                u.getDarkMode() != null ? u.getDarkMode() : false,
+                u.getPuan(),
+                u.getAltin(),
+                u.getGamificationState());
     }
 
     public LoginResponse login(LoginRequest r) {
@@ -50,7 +53,10 @@ public class AuthService {
         AppUser u = repo.findByEmail(r.email()).orElseThrow();
         var userDto = new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
                 u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(),
-                u.getDarkMode() != null ? u.getDarkMode() : false);
+                u.getDarkMode() != null ? u.getDarkMode() : false,
+                u.getPuan(),
+                u.getAltin(),
+                u.getGamificationState());
         return new LoginResponse(token, userDto);
     }
 }

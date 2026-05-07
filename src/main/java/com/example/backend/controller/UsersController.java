@@ -34,7 +34,10 @@ public class UsersController {
         
         return new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), roleToShow, u.getAvatarUrl(), 
                 u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(), 
-                u.getDarkMode() != null ? u.getDarkMode() : false);
+                u.getDarkMode() != null ? u.getDarkMode() : false,
+                u.getPuan(),
+                u.getAltin(),
+                u.getGamificationState());
     }
 
     @PutMapping("/me")
@@ -83,6 +86,21 @@ public class UsersController {
         if (dto.getDarkMode() != null) {
             user.setDarkMode(dto.getDarkMode());
         }
+
+        // Puan güncellemesi (gamification sistemi)
+        if (dto.getPuan() != null) {
+            user.setPuan(Math.max(0, dto.getPuan()));
+        }
+
+        // Altın güncellemesi (gamification sistemi)
+        if (dto.getAltin() != null) {
+            user.setAltin(Math.max(0, dto.getAltin()));
+        }
+
+        // Kalici oyun durumu JSON
+        if (dto.getGamificationState() != null) {
+            user.setGamificationState(dto.getGamificationState());
+        }
         
         AppUser savedUser = repo.save(user);
         
@@ -104,7 +122,10 @@ public class UsersController {
             savedUser.getHedefUniversite(),
             savedUser.getHedefBolum(),
             savedUser.getHedefPuan(),
-            savedUser.getDarkMode() != null ? savedUser.getDarkMode() : false
+            savedUser.getDarkMode() != null ? savedUser.getDarkMode() : false,
+            savedUser.getPuan(),
+            savedUser.getAltin(),
+            savedUser.getGamificationState()
         );
         
         return ResponseEntity.ok(response);
@@ -116,7 +137,10 @@ public class UsersController {
         return repo.findAll().stream()
                 .map(u -> new AuthUserDTO(u.getId(), u.getEmail(), u.getAd(), u.getSoyad(), u.getRole(), u.getAvatarUrl(), 
                         u.getHedefSiralama(), u.getHedefUniversite(), u.getHedefBolum(), u.getHedefPuan(),
-                        u.getDarkMode() != null ? u.getDarkMode() : false))
+                        u.getDarkMode() != null ? u.getDarkMode() : false,
+                        u.getPuan(),
+                        u.getAltin(),
+                        u.getGamificationState()))
                 .toList();
     }
 }
