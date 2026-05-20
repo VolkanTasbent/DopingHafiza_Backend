@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -35,105 +36,135 @@ public class SoruService {
     private final SoruRepository soruRepo;
     private final SecenekRepository secenekRepo;
     private final DenemeSinaviSoruRepository denemeSoruRepo;
+    private final UserSolvedQuestionService userSolvedQuestionService;
 
     public SoruService(DersRepository dersRepo,
                        KonuRepository konuRepo,
                        SoruRepository soruRepo,
                        SecenekRepository secenekRepo,
-                       DenemeSinaviSoruRepository denemeSoruRepo) {
+                       DenemeSinaviSoruRepository denemeSoruRepo,
+                       UserSolvedQuestionService userSolvedQuestionService) {
         this.dersRepo = dersRepo;
         this.konuRepo = konuRepo;
         this.soruRepo = soruRepo;
         this.secenekRepo = secenekRepo;
         this.denemeSoruRepo = denemeSoruRepo;
+        this.userSolvedQuestionService = userSolvedQuestionService;
     }
 
     /** Ders bazlı listeleme (limit ile) - Deneme sınavı soruları hariç */
     @Transactional(readOnly = true)
     public List<SoruDTO> getSorular(Long dersId, Integer limit, boolean filterDenemeSorular) {
+        return getSorular(dersId, limit, filterDenemeSorular, null, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SoruDTO> getSorular(Long dersId, Integer limit, boolean filterDenemeSorular,
+                                    Long userId, boolean excludeCozulmus) {
         Ders ders = dersRepo.findById(dersId)
                 .orElseThrow(() -> new IllegalArgumentException("Ders bulunamadı: " + dersId));
         int lim = (limit != null && limit > 0) ? limit : 50;
         var list = soruRepo.findByDersOrderByIdAsc(ders, PageRequest.of(0, lim));
         
-        // Admin kullanıcılar için filtreleme yapma
         if (!filterDenemeSorular) {
-            return list.stream().map(this::toDTO).toList();
+            return applySolvedFilter(list, dersId, null, userId, excludeCozulmus);
         }
-        
-        // Deneme sınavındaki tüm soru metinlerini al (normalize edilmiş - trim, lowercase)
+
         Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
                 .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
                 .filter(metin -> !metin.isEmpty())
                 .collect(Collectors.toSet());
-        
-        // Sadece deneme sınavında OLMAYAN soruları döndür (soru metnine göre kontrol)
-        return list.stream()
+
+        var filtered = list.stream()
                 .filter(s -> {
-                    if (s.getMetin() == null) return true; // Metin yoksa geç
+                    if (s.getMetin() == null) return true;
                     String soruMetni = s.getMetin().trim().toLowerCase();
-                    return !denemeSoruMetinleri.contains(soruMetni); // Deneme sınavında olmayanları al
+                    return !denemeSoruMetinleri.contains(soruMetni);
                 })
-                .map(this::toDTO)
                 .toList();
+        return applySolvedFilter(filtered, dersId, null, userId, excludeCozulmus);
     }
 
     /** Ders + Konu bazlı listeleme (limit ile) - Deneme sınavı soruları hariç */
     @Transactional(readOnly = true)
     public List<SoruDTO> getSorularByKonu(Long dersId, Long konuId, Integer limit, boolean filterDenemeSorular) {
+        return getSorularByKonu(dersId, konuId, limit, filterDenemeSorular, null, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SoruDTO> getSorularByKonu(Long dersId, Long konuId, Integer limit, boolean filterDenemeSorular,
+                                         Long userId, boolean excludeCozulmus) {
         Ders ders = dersRepo.findById(dersId)
                 .orElseThrow(() -> new IllegalArgumentException("Ders bulunamadı: " + dersId));
         int lim = (limit != null && limit > 0) ? limit : 50;
         var list = soruRepo.findDistinctByDersAndKonular_IdOrderByIdAsc(ders, konuId, PageRequest.of(0, lim));
         
-        // Admin kullanıcılar için filtreleme yapma
         if (!filterDenemeSorular) {
-            return list.stream().map(this::toDTO).toList();
+            return applySolvedFilter(list, dersId, konuId, userId, excludeCozulmus);
         }
-        
-        // Deneme sınavındaki tüm soru metinlerini al (normalize edilmiş - trim, lowercase)
+
         Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
                 .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
                 .filter(metin -> !metin.isEmpty())
                 .collect(Collectors.toSet());
-        
-        // Sadece deneme sınavında OLMAYAN soruları döndür (soru metnine göre kontrol)
-        return list.stream()
+
+        var filtered = list.stream()
                 .filter(s -> {
-                    if (s.getMetin() == null) return true; // Metin yoksa geç
+                    if (s.getMetin() == null) return true;
                     String soruMetni = s.getMetin().trim().toLowerCase();
-                    return !denemeSoruMetinleri.contains(soruMetni); // Deneme sınavında olmayanları al
+                    return !denemeSoruMetinleri.contains(soruMetni);
                 })
-                .map(this::toDTO)
                 .toList();
+        return applySolvedFilter(filtered, dersId, konuId, userId, excludeCozulmus);
     }
 
     /** Ders bazlı sayfalı listeleme - Deneme sınavı soruları hariç */
     @Transactional(readOnly = true)
     public List<SoruDTO> getSorularPaged(Long dersId, int page, int size, boolean filterDenemeSorular) {
+        return getSorularPaged(dersId, page, size, filterDenemeSorular, null, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SoruDTO> getSorularPaged(Long dersId, int page, int size, boolean filterDenemeSorular,
+                                         Long userId, boolean excludeCozulmus) {
         Ders ders = dersRepo.findById(dersId)
                 .orElseThrow(() -> new IllegalArgumentException("Ders bulunamadı: " + dersId));
         var list = soruRepo.findByDersOrderByIdAsc(ders, PageRequest.of(Math.max(0, page), Math.max(1, size)));
         
-        // Admin kullanıcılar için filtreleme yapma
         if (!filterDenemeSorular) {
-            return list.stream().map(this::toDTO).toList();
+            return applySolvedFilter(list, dersId, null, userId, excludeCozulmus);
         }
-        
-        // Deneme sınavındaki tüm soru metinlerini al (normalize edilmiş - trim, lowercase)
+
         Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
                 .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
                 .filter(metin -> !metin.isEmpty())
                 .collect(Collectors.toSet());
-        
-        // Sadece deneme sınavında OLMAYAN soruları döndür (soru metnine göre kontrol)
-        return list.stream()
+
+        var filtered = list.stream()
                 .filter(s -> {
-                    if (s.getMetin() == null) return true; // Metin yoksa geç
+                    if (s.getMetin() == null) return true;
                     String soruMetni = s.getMetin().trim().toLowerCase();
-                    return !denemeSoruMetinleri.contains(soruMetni); // Deneme sınavında olmayanları al
+                    return !denemeSoruMetinleri.contains(soruMetni);
                 })
-                .map(this::toDTO)
+                .toList();
+        return applySolvedFilter(filtered, dersId, null, userId, excludeCozulmus);
+    }
+
+    private List<SoruDTO> applySolvedFilter(List<Soru> sorular, Long dersId, Long konuId,
+                                           Long userId, boolean excludeCozulmus) {
+        if (userId == null) {
+            return sorular.stream().map(s -> toDTO(s, null, null, null)).toList();
+        }
+        Set<Long> excludedIds = userSolvedQuestionService.getExcludedSoruIds(userId, dersId, konuId);
+        Set<Long> blankIds = userSolvedQuestionService.getBlankSoruIds(userId, dersId, konuId);
+        return sorular.stream()
+                .filter(s -> !excludeCozulmus || !excludedIds.contains(s.getId()))
+                .map(s -> toDTO(
+                        s,
+                        excludedIds.contains(s.getId()),
+                        null,
+                        blankIds.contains(s.getId())
+                ))
                 .toList();
     }
 
@@ -182,9 +213,20 @@ public class SoruService {
     /** ID ile getir (ilişkiler eager) */
     @Transactional(readOnly = true)
     public SoruDTO getById(Long id) {
+        return getById(id, null);
+    }
+
+    @Transactional(readOnly = true)
+    public SoruDTO getById(Long id, Long userId) {
         Soru s = soruRepo.findWithRelsById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Soru bulunamadı: " + id));
-        return toDTO(s);
+        if (userId == null) {
+            return toDTO(s, null, null, null);
+        }
+        Long dersId = s.getDers() != null ? s.getDers().getId() : null;
+        boolean cozuldu = userSolvedQuestionService.getExcludedSoruIds(userId, dersId, null).contains(s.getId());
+        boolean bosBirakildi = userSolvedQuestionService.getBlankSoruIds(userId, dersId, null).contains(s.getId());
+        return toDTO(s, cozuldu, null, bosBirakildi);
     }
 
     /** Seçenek ekle */
@@ -486,6 +528,10 @@ public class SoruService {
 
     // ---- Dönüşüm ----
     private SoruDTO toDTO(Soru s) {
+        return toDTO(s, null, null, null);
+    }
+
+    private SoruDTO toDTO(Soru s, Boolean cozuldu, Instant cozulduAt, Boolean bosBirakildi) {
         var konuDtos = s.getKonular().stream()
                 .map(k -> new KonuDTO(
                     k.getId(), 
@@ -511,7 +557,10 @@ public class SoruService {
                 s.getDers() != null && s.getDers().getAd() != null ? s.getDers().getAd() : "",
                 konuDtos,
                 opts,
-                s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : ""
+                s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : "",
+                cozuldu,
+                cozulduAt,
+                bosBirakildi
         );
     }
 }

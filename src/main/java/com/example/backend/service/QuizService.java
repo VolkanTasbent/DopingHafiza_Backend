@@ -29,6 +29,7 @@ public class QuizService {
     private final DenemeSinaviCevapRepository denemeCevapRepo;
     private final com.example.backend.repository.UserActivityRepository userActivityRepo;
     private final ScoreCalculationService scoreCalculationService;
+    private final UserSolvedQuestionService userSolvedQuestionService;
 
     public QuizService(
             DersRepository dersRepo,
@@ -40,7 +41,8 @@ public class QuizService {
             DenemeSinaviSoruRepository denemeSoruRepo,
             DenemeSinaviCevapRepository denemeCevapRepo,
             com.example.backend.repository.UserActivityRepository userActivityRepo,
-            ScoreCalculationService scoreCalculationService
+            ScoreCalculationService scoreCalculationService,
+            UserSolvedQuestionService userSolvedQuestionService
     ) {
         this.dersRepo = dersRepo;
         this.soruRepo = soruRepo;
@@ -52,6 +54,7 @@ public class QuizService {
         this.denemeCevapRepo = denemeCevapRepo;
         this.userActivityRepo = userActivityRepo;
         this.scoreCalculationService = scoreCalculationService;
+        this.userSolvedQuestionService = userSolvedQuestionService;
     }
 
     /** ✅ Quiz sonuçlarını kaydeder */
@@ -88,13 +91,11 @@ public class QuizService {
                     }
                 }
 
-                // 🧩 Debug log
                 System.out.println("🧠 SoruID=" + it.soruId() +
                         " | SeçenekID=" + it.secenekId() +
                         " | Dogru=" + dogru +
                         " | Boş=" + bosmu);
 
-                // Puanlama: Doğru +3, Yanlış -1, Boş 0
                 if (bosmu) {
                     empty++;
                 } else if (dogru) {
@@ -109,6 +110,10 @@ public class QuizService {
                 c.setSecenek(secenek);
                 c.setDogru(dogru);
                 cevapRepo.save(c);
+
+                if (user != null) {
+                    userSolvedQuestionService.markAttempt(user.getId(), soru.getId(), bosmu, dogru, oturum.getId());
+                }
             }
         }
 
@@ -392,7 +397,10 @@ public class QuizService {
                 soru.getDers() != null && soru.getDers().getAd() != null ? soru.getDers().getAd() : "Genel",
                 konular,
                 secenekler,
-                soru.getCozumVideosuUrl() != null ? soru.getCozumVideosuUrl() : ""
+                soru.getCozumVideosuUrl() != null ? soru.getCozumVideosuUrl() : "",
+                null,
+                null,
+                null
         );
     }
 
@@ -437,10 +445,13 @@ public class QuizService {
                 s.getTip() != null ? s.getTip() : "",
                 s.getZorluk(),
                 s.getImageUrl() != null ? s.getImageUrl() : "",
-                dersAdi, // DÜZELTİLDİ: Ders bilgisi eklendi
+                dersAdi,
                 konular,
                 secenekler,
-                s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : ""
+                s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : "",
+                null,
+                null,
+                null
         );
     }
 

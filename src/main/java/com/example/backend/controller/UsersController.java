@@ -1,9 +1,12 @@
 package com.example.backend.controller;
 
 import com.example.backend.dto.AuthUserDTO;
+import com.example.backend.dto.SolvedQuestionCountDTO;
+import com.example.backend.dto.SolvedQuestionsDTO;
 import com.example.backend.dto.UpdateUserDTO;
 import com.example.backend.model.AppUser;
 import com.example.backend.repository.AppUserRepository;
+import com.example.backend.service.UserSolvedQuestionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,8 +20,39 @@ import java.util.List;
 public class UsersController {
 
     private final AppUserRepository repo;
+    private final UserSolvedQuestionService solvedQuestionService;
 
-    public UsersController(AppUserRepository repo) { this.repo = repo; }
+    public UsersController(AppUserRepository repo, UserSolvedQuestionService solvedQuestionService) {
+        this.repo = repo;
+        this.solvedQuestionService = solvedQuestionService;
+    }
+
+    private AppUser requireUser(Authentication auth) {
+        var email = auth != null ? auth.getName() : null;
+        return repo.findByEmail(email).orElseThrow();
+    }
+
+    @GetMapping("/me/solved-questions")
+    @PreAuthorize("isAuthenticated()")
+    public SolvedQuestionsDTO mySolvedQuestions(
+            Authentication auth,
+            @RequestParam(required = false) Long dersId,
+            @RequestParam(required = false) Long konuId
+    ) {
+        AppUser user = requireUser(auth);
+        return solvedQuestionService.listSolved(user.getId(), dersId, konuId);
+    }
+
+    @GetMapping("/me/solved-questions/count")
+    @PreAuthorize("isAuthenticated()")
+    public SolvedQuestionCountDTO mySolvedQuestionCount(
+            Authentication auth,
+            @RequestParam(required = false) Long dersId,
+            @RequestParam(required = false) Long konuId
+    ) {
+        AppUser user = requireUser(auth);
+        return solvedQuestionService.countSolved(user.getId(), dersId, konuId);
+    }
 
     @GetMapping("/me")
     public AuthUserDTO me(Authentication auth) {

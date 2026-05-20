@@ -73,6 +73,7 @@ public class SecurityConfig {
 
                         // Kullanıcı uçları
                         .requestMatchers(GET, "/api/users/me").authenticated()
+                        .requestMatchers(GET, "/api/users/me/solved-questions/**").authenticated()
                         .requestMatchers(GET, "/api/activities/**").authenticated() // Son aktiviteler
                         .requestMatchers(POST, "/api/activities/**").authenticated() // Aktivite kaydet
                         .requestMatchers("/api/video-notes/**").authenticated() // Video notları (CRUD)

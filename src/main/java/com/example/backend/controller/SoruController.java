@@ -8,6 +8,8 @@ import com.example.backend.dto.SoruDTO;
 import com.example.backend.dto.UpdateDenemeSinaviSoruRequest;
 import com.example.backend.dto.UpdateSecenekRequest;
 import com.example.backend.dto.UpdateSoruRequest;
+import com.example.backend.model.AppUser;
+import com.example.backend.repository.AppUserRepository;
 import com.example.backend.repository.DenemeSinaviSoruRepository;
 import com.example.backend.repository.KonuRepository;
 import com.example.backend.repository.SoruRepository;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.util.*;
 
 @RestController
@@ -33,16 +36,19 @@ public class SoruController {
     private final DenemeSinaviService denemeSinaviService;
     private final DenemeSinaviSoruRepository denemeSoruRepo;
     private final KonuRepository konuRepo;
-    
-    public SoruController(SoruService service, SoruRepository soruRepo, 
+    private final AppUserRepository userRepo;
+
+    public SoruController(SoruService service, SoruRepository soruRepo,
                           DenemeSinaviService denemeSinaviService,
                           DenemeSinaviSoruRepository denemeSoruRepo,
-                          KonuRepository konuRepo) { 
+                          KonuRepository konuRepo,
+                          AppUserRepository userRepo) {
         this.service = service;
         this.soruRepo = soruRepo;
         this.denemeSinaviService = denemeSinaviService;
         this.denemeSoruRepo = denemeSoruRepo;
         this.konuRepo = konuRepo;
+        this.userRepo = userRepo;
     }
 
     @GetMapping
@@ -50,25 +56,33 @@ public class SoruController {
                                @RequestParam(required = false) Long konuId,
                                @RequestParam(required = false) Integer limit,
                                @RequestParam(required = false) Integer page,
-                               @RequestParam(required = false) Integer size) {
-        // Her zaman deneme sınavı sorularını filtrele
+                               @RequestParam(required = false) Integer size,
+                               @RequestParam(required = false) Boolean excludeCozulmus,
+                               Principal principal) {
+        Long userId = resolveUserId(principal);
+        boolean exclude = Boolean.TRUE.equals(excludeCozulmus) && userId != null;
         if (konuId != null) {
-            return service.getSorularByKonu(dersId, konuId, limit, true);
+            return service.getSorularByKonu(dersId, konuId, limit, true, userId, exclude);
         }
         if (page != null || size != null) {
             int p = page != null ? Math.max(0, page) : 0;
             int s = size != null ? Math.max(1, size) : 10;
-            return service.getSorularPaged(dersId, p, s, true);
+            return service.getSorularPaged(dersId, p, s, true, userId, exclude);
         }
-        return service.getSorular(dersId, limit, true);
+        return service.getSorular(dersId, limit, true, userId, exclude);
+    }
+
+    private Long resolveUserId(Principal principal) {
+        if (principal == null || principal.getName() == null) return null;
+        return userRepo.findByEmail(principal.getName()).map(AppUser::getId).orElse(null);
     }
 
     /** Tek soru getir (ID ile) - Hem normal sorular hem de deneme sınavı soruları için */
     @GetMapping("/{id}")
-    public SoruDTO getById(@PathVariable Long id) {
-        // Önce normal soru tablosunda ara
+    public SoruDTO getById(@PathVariable Long id, Principal principal) {
+        Long userId = resolveUserId(principal);
         if (soruRepo.existsById(id)) {
-            return service.getById(id);
+            return service.getById(id, userId);
         }
         
         // Bulunamadıysa deneme sınavı soruları tablosunda ara
@@ -130,13 +144,16 @@ public class SoruController {
         return new SoruDTO(
             denemeSoru.id(),
             denemeSoru.soruMetni() != null ? denemeSoru.soruMetni() : "",
-            "coktan_secmeli", // Deneme sınavı soruları genelde çoktan seçmeli
+            "coktan_secmeli",
             denemeSoru.zorluk(),
-            denemeSoru.imageUrl() != null ? denemeSoru.imageUrl() : "", // imageUrl eklendi
+            denemeSoru.imageUrl() != null ? denemeSoru.imageUrl() : "",
             denemeSoru.dersAd() != null ? denemeSoru.dersAd() : "Bilinmeyen",
             konular,
             secenekler,
-            denemeSoru.cozumVideosuUrl() != null ? denemeSoru.cozumVideosuUrl() : ""
+            denemeSoru.cozumVideosuUrl() != null ? denemeSoru.cozumVideosuUrl() : "",
+            null,
+            null,
+            null
         );
     }
 

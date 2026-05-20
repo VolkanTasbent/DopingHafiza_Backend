@@ -158,7 +158,10 @@ public class DenemeSinaviService {
             s.getDers() != null && s.getDers().getAd() != null ? s.getDers().getAd() : "",
             konular,
             secenekler,
-            s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : ""
+            s.getCozumVideosuUrl() != null ? s.getCozumVideosuUrl() : "",
+            null,
+            null,
+            null
         );
     }
 

@@ -1,5 +1,6 @@
 package com.example.backend.dto;
 
+import java.time.Instant;
 import java.util.List;
 
 public record SoruDTO(
@@ -11,5 +12,8 @@ public record SoruDTO(
         String dersAd,
         List<KonuDTO> konular,
         List<SecenekDTO> secenekler,
-        String cozumVideosuUrl
+        String cozumVideosuUrl,
+        Boolean cozuldu,
+        Instant cozulduAt,
+        Boolean bosBirakildi
 ) {}
