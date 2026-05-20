@@ -22,6 +22,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,10 @@ public class SoruService {
     private final SecenekRepository secenekRepo;
     private final DenemeSinaviSoruRepository denemeSoruRepo;
     private final UserSolvedQuestionService userSolvedQuestionService;
+
+    private volatile Set<String> cachedDenemeMetinleri = Set.of();
+    private volatile long denemeMetinCacheAtMs = 0L;
+    private static final long DENEME_METIN_CACHE_TTL_MS = 10 * 60 * 1000L;
 
     public SoruService(DersRepository dersRepo,
                        KonuRepository konuRepo,
@@ -70,18 +76,7 @@ public class SoruService {
             return applySolvedFilter(list, dersId, null, userId, excludeCozulmus);
         }
 
-        Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
-                .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
-                .filter(metin -> !metin.isEmpty())
-                .collect(Collectors.toSet());
-
-        var filtered = list.stream()
-                .filter(s -> {
-                    if (s.getMetin() == null) return true;
-                    String soruMetni = s.getMetin().trim().toLowerCase();
-                    return !denemeSoruMetinleri.contains(soruMetni);
-                })
-                .toList();
+        var filtered = filterOutDenemeSorular(list);
         return applySolvedFilter(filtered, dersId, null, userId, excludeCozulmus);
     }
 
@@ -103,18 +98,7 @@ public class SoruService {
             return applySolvedFilter(list, dersId, konuId, userId, excludeCozulmus);
         }
 
-        Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
-                .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
-                .filter(metin -> !metin.isEmpty())
-                .collect(Collectors.toSet());
-
-        var filtered = list.stream()
-                .filter(s -> {
-                    if (s.getMetin() == null) return true;
-                    String soruMetni = s.getMetin().trim().toLowerCase();
-                    return !denemeSoruMetinleri.contains(soruMetni);
-                })
-                .toList();
+        var filtered = filterOutDenemeSorular(list);
         return applySolvedFilter(filtered, dersId, konuId, userId, excludeCozulmus);
     }
 
@@ -135,35 +119,75 @@ public class SoruService {
             return applySolvedFilter(list, dersId, null, userId, excludeCozulmus);
         }
 
-        Set<String> denemeSoruMetinleri = denemeSoruRepo.findAll().stream()
+        var filtered = filterOutDenemeSorular(list);
+        return applySolvedFilter(filtered, dersId, null, userId, excludeCozulmus);
+    }
+
+    private Set<String> getDenemeSoruMetinleri() {
+        long now = System.currentTimeMillis();
+        if (now - denemeMetinCacheAtMs < DENEME_METIN_CACHE_TTL_MS && !cachedDenemeMetinleri.isEmpty()) {
+            return cachedDenemeMetinleri;
+        }
+        Set<String> metinler = denemeSoruRepo.findAll().stream()
                 .map(ds -> ds.getSoruMetni() != null ? ds.getSoruMetni().trim().toLowerCase() : "")
                 .filter(metin -> !metin.isEmpty())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toUnmodifiableSet());
+        cachedDenemeMetinleri = metinler;
+        denemeMetinCacheAtMs = now;
+        return metinler;
+    }
 
-        var filtered = list.stream()
+    private List<Soru> filterOutDenemeSorular(List<Soru> list) {
+        Set<String> denemeSoruMetinleri = getDenemeSoruMetinleri();
+        return list.stream()
                 .filter(s -> {
                     if (s.getMetin() == null) return true;
                     String soruMetni = s.getMetin().trim().toLowerCase();
                     return !denemeSoruMetinleri.contains(soruMetni);
                 })
                 .toList();
-        return applySolvedFilter(filtered, dersId, null, userId, excludeCozulmus);
+    }
+
+    private Map<Long, List<SecenekDTO>> batchSecenekDtos(List<Soru> sorular) {
+        List<Long> ids = sorular.stream().map(Soru::getId).filter(id -> id != null).toList();
+        if (ids.isEmpty()) return Map.of();
+        Map<Long, List<SecenekDTO>> out = new HashMap<>();
+        for (Secenek o : secenekRepo.findBySoruIdIn(ids)) {
+            if (o.getSoru() == null || o.getSoru().getId() == null) continue;
+            out.computeIfAbsent(o.getSoru().getId(), k -> new ArrayList<>())
+                    .add(new SecenekDTO(o.getId(), o.getMetin() != null ? o.getMetin() : "", o.isDogru(), o.getSiralama()));
+        }
+        return out;
     }
 
     private List<SoruDTO> applySolvedFilter(List<Soru> sorular, Long dersId, Long konuId,
                                            Long userId, boolean excludeCozulmus) {
-        if (userId == null) {
-            return sorular.stream().map(s -> toDTO(s, null, null, null)).toList();
+        List<Soru> visible = sorular;
+        Set<Long> excludedIds = Set.of();
+        Set<Long> blankIds = Set.of();
+        if (userId != null) {
+            excludedIds = userSolvedQuestionService.getExcludedSoruIds(userId, dersId, konuId);
+            blankIds = userSolvedQuestionService.getBlankSoruIds(userId, dersId, konuId);
+            if (excludeCozulmus) {
+                Set<Long> ex = excludedIds;
+                visible = sorular.stream().filter(s -> !ex.contains(s.getId())).toList();
+            }
         }
-        Set<Long> excludedIds = userSolvedQuestionService.getExcludedSoruIds(userId, dersId, konuId);
-        Set<Long> blankIds = userSolvedQuestionService.getBlankSoruIds(userId, dersId, konuId);
-        return sorular.stream()
-                .filter(s -> !excludeCozulmus || !excludedIds.contains(s.getId()))
+        Map<Long, List<SecenekDTO>> optsBySoru = batchSecenekDtos(visible);
+        if (userId == null) {
+            return visible.stream()
+                    .map(s -> toDTO(s, null, null, null, optsBySoru.getOrDefault(s.getId(), List.of())))
+                    .toList();
+        }
+        Set<Long> exFinal = excludedIds;
+        Set<Long> blankFinal = blankIds;
+        return visible.stream()
                 .map(s -> toDTO(
                         s,
-                        excludedIds.contains(s.getId()),
+                        exFinal.contains(s.getId()),
                         null,
-                        blankIds.contains(s.getId())
+                        blankFinal.contains(s.getId()),
+                        optsBySoru.getOrDefault(s.getId(), List.of())
                 ))
                 .toList();
     }
@@ -532,6 +556,13 @@ public class SoruService {
     }
 
     private SoruDTO toDTO(Soru s, Boolean cozuldu, Instant cozulduAt, Boolean bosBirakildi) {
+        var opts = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
+                .map(o -> new SecenekDTO(o.getId(), o.getMetin() != null ? o.getMetin() : "", o.isDogru(), o.getSiralama()))
+                .toList();
+        return toDTO(s, cozuldu, cozulduAt, bosBirakildi, opts);
+    }
+
+    private SoruDTO toDTO(Soru s, Boolean cozuldu, Instant cozulduAt, Boolean bosBirakildi, List<SecenekDTO> opts) {
         var konuDtos = s.getKonular().stream()
                 .map(k -> new KonuDTO(
                     k.getId(), 
@@ -542,10 +573,6 @@ public class SoruService {
                     k.getAciklama() != null ? k.getAciklama() : null,
                     k.getDers() != null ? k.getDers().getId() : null,
                     java.util.Collections.emptyList())) // Videolar lazy load edilmediği için boş liste
-                .toList();
-
-        var opts = secenekRepo.findBySoruOrderBySiralamaAscIdAsc(s).stream()
-                .map(o -> new SecenekDTO(o.getId(), o.getMetin() != null ? o.getMetin() : "", o.isDogru(), o.getSiralama()))
                 .toList();
 
         return new SoruDTO(
