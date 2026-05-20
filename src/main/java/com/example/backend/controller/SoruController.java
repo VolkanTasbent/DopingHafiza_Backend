@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -73,8 +74,17 @@ public class SoruController {
     }
 
     private Long resolveUserId(Principal principal) {
-        if (principal == null || principal.getName() == null) return null;
-        return userRepo.findByEmail(principal.getName()).map(AppUser::getId).orElse(null);
+        String email = null;
+        if (principal != null && principal.getName() != null) {
+            email = principal.getName();
+        } else {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && auth.getName() != null) {
+                email = auth.getName();
+            }
+        }
+        if (email == null) return null;
+        return userRepo.findByEmail(email).map(AppUser::getId).orElse(null);
     }
 
     /** Tek soru getir (ID ile) - Hem normal sorular hem de deneme sınavı soruları için */
